@@ -1,0 +1,33 @@
+import { useEffect, useMemo, useState } from "react";
+import type { DaySummary, FoodEntry, Macros } from "@calos/core";
+
+type IconProps = { weight?: string; fill?: string };
+const glyph = (mark: string) => ({ weight: _weight }: IconProps) => <span aria-hidden="true">{mark}</span>;
+const ArrowUpRightIcon = glyph("↗");
+const ChatCircleDotsIcon = glyph("◌");
+const FireIcon = glyph("♨");
+const ForkKnifeIcon = glyph("⌘");
+const PaperPlaneTiltIcon = glyph("↑");
+const PlusIcon = glyph("+");
+const TrashIcon = glyph("×");
+const TrendUpIcon = glyph("↗");
+
+const today = () => new Date().toISOString().slice(0, 10);
+const formatDate = (value: string) => new Intl.DateTimeFormat("es-ES", { weekday: "long", day: "numeric", month: "long" }).format(new Date(`${value}T12:00:00`));
+const initialSummary: DaySummary = { date: today(), entries: [], total: { calories: 0, protein: 0, carbs: 0, fat: 0 } };
+type Message = { role: "assistant" | "user"; text: string };
+
+function Macro({ name, amount, target, unit, color }: { name: string; amount: number; target: number; unit: string; color: string }) { const percent = Math.min(100, Math.round((amount / target) * 100)); return <div className="macro"><div className="macro-head"><span>{name}</span><strong>{amount}<small>{unit}</small></strong></div><div className="track"><i style={{ width: `${percent}%`, background: color }} /></div><span className="macro-target">de {target}{unit}</span></div>; }
+function mealIcon(meal: FoodEntry["meal"]) { return meal === "Desayuno" ? "☼" : meal === "Comida" ? "◒" : meal === "Cena" ? "◐" : "·"; }
+
+export function App() {
+  const [summary, setSummary] = useState(initialSummary); const [draft, setDraft] = useState(""); const [sending, setSending] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([{ role: "assistant", text: "Hola. Cuéntame qué has comido y lo registraré en tu diario." }]);
+  const refresh = () => window.calos.today(today()).then(setSummary).catch(() => undefined);
+  useEffect(() => { void refresh(); }, []);
+  const groups = useMemo(() => ["Desayuno", "Comida", "Cena", "Snack"].map((meal) => ({ meal: meal as FoodEntry["meal"], entries: summary.entries.filter((entry) => entry.meal === meal) })).filter((group) => group.entries.length), [summary.entries]);
+  const remaining = Math.max(0, 2200 - summary.total.calories); const ring = Math.min(100, summary.total.calories / 2200 * 100);
+  const send = async (event: React.FormEvent) => { event.preventDefault(); const message = draft.trim(); if (!message || sending) return; setDraft(""); setMessages((current) => [...current, { role: "user", text: message }]); setSending(true); try { const reply = await window.calos.sendMessage(message); setMessages((current) => [...current, { role: "assistant", text: reply.message }]); await refresh(); } catch { setMessages((current) => [...current, { role: "assistant", text: "No he podido guardar esa comida. Prueba de nuevo." }]); } finally { setSending(false); } };
+  const remove = async (id: string) => { await window.calos.deleteEntry(id); await refresh(); };
+  return <main className="app-shell"><aside className="sidebar"><div className="brand"><span className="brand-mark"><ForkKnifeIcon weight="bold" /></span><span>calos</span></div><nav><a className="active" href="#diario"><TrendUpIcon weight="bold" />Hoy</a><a href="#chat"><ChatCircleDotsIcon weight="bold" />Asistente</a></nav><div className="sidebar-footer"><span className="status-dot" /> Datos en tu equipo</div></aside><section className="content" id="diario"><header><div><p className="date">{formatDate(summary.date)}</p><h1>Tu día, de un vistazo.</h1></div><button className="quiet-button" onClick={() => document.getElementById("chat-input")?.focus()}><PlusIcon weight="bold" /> Registrar comida</button></header><div className="dashboard"><section className="calorie-panel"><div><p className="section-label">Energía de hoy</p><div className="calorie-copy"><strong>{summary.total.calories.toLocaleString("es-ES")}</strong><span>kcal consumidas</span></div><p className="remaining"><FireIcon weight="fill" /> Te quedan <b>{remaining.toLocaleString("es-ES")} kcal</b></p></div><div className="calorie-ring" style={{ "--progress": `${ring * 3.6}deg` } as React.CSSProperties}><div><b>{Math.round(ring)}%</b><span>objetivo</span></div></div></section><section className="macro-panel"><p className="section-label">Macronutrientes</p><Macro name="Proteína" amount={summary.total.protein} target={140} unit=" g" color="oklch(0.48 0.13 140)" /><Macro name="Carbohidratos" amount={summary.total.carbs} target={250} unit=" g" color="oklch(0.63 0.15 80)" /><Macro name="Grasas" amount={summary.total.fat} target={70} unit=" g" color="oklch(0.53 0.15 20)" /></section></div><section className="diary"><div className="diary-title"><div><p className="section-label">Diario</p><h2>Lo que has comido</h2></div><span>{summary.entries.length} {summary.entries.length === 1 ? "registro" : "registros"}</span></div>{groups.length ? groups.map((group) => <div className="meal-group" key={group.meal}><h3><i>{mealIcon(group.meal)}</i>{group.meal}</h3>{group.entries.map((entry) => <article className="food-row" key={entry.id}><div><strong>{entry.name}</strong><span>{entry.quantity} · P {entry.protein}g · C {entry.carbs}g · G {entry.fat}g</span></div><b>{entry.calories} <small>kcal</small></b><button aria-label={`Eliminar ${entry.name}`} onClick={() => void remove(entry.id)}><TrashIcon /></button></article>)}</div>) : <div className="empty"><span><ForkKnifeIcon /></span><div><h3>Tu diario está preparado</h3><p>Escribe a la derecha qué has comido para registrar tu primera comida.</p></div></div>}</section></section><aside className="chat" id="chat"><div className="chat-header"><div><span className="chat-orb"><ChatCircleDotsIcon weight="fill" /></span><div><strong>Asistente Calos</strong><small><i />Listo para ayudarte</small></div></div><button aria-label="Abrir en ventana"><ArrowUpRightIcon /></button></div><div className="messages">{messages.map((message, index) => <div className={`message ${message.role}`} key={index}>{message.text}</div>)}{sending && <div className="message assistant loading">Calculando…</div>}</div><form className="composer" onSubmit={send}><label htmlFor="chat-input">¿Qué has comido?</label><div><textarea id="chat-input" value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Ej. Hoy he comido pollo, arroz y yogur" rows={3} /><button disabled={!draft.trim() || sending} aria-label="Enviar"><PaperPlaneTiltIcon weight="fill" /></button></div><p>Prueba con: pollo, arroz, huevo, avena, yogur o plátano.</p></form></aside></main>;
+}
