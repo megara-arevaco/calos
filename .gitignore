@@ -1,4 +1,10 @@
 node_modules
 out
+.test-build
 release
 *.log
+.env
+.env.*
+!.env.example
+playwright-report
+test-results

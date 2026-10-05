@@ -1,1 +1,12 @@
-{ "compilerOptions": { "target": "ES2022", "module": "NodeNext", "moduleResolution": "NodeNext", "strict": true, "jsx": "react-jsx", "skipLibCheck": true, "types": ["node"] }, "include": ["src", "electron.vite.config.ts"] }
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["src", "electron.vite.config.ts"]
+}
