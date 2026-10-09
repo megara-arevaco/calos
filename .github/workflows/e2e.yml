@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  electron:
+  web:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -16,23 +16,20 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Install Linux dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb
-          pnpm --filter @calos/desktop exec playwright install-deps chromium
+      - name: Install Chromium
+        run: pnpm --filter @calos/web exec playwright install --with-deps chromium
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm format:check
-      - run: xvfb-run -a pnpm test
+      - run: pnpm test
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: e2e-results
           path: |
-            apps/desktop/playwright-report
-            apps/desktop/test-results
+            apps/web/playwright-report
+            apps/web/test-results
           retention-days: 7

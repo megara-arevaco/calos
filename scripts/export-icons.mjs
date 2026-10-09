@@ -1,39 +1,17 @@
 import { createRequire } from "node:module";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
-const require = createRequire(join(root, "apps/desktop/package.json"));
-const { _electron } = require("@playwright/test");
-const assets = join(root, "apps/desktop/src/renderer/public/branding");
+const require = createRequire(join(root, "apps/web/package.json"));
+const { chromium } = require("@playwright/test");
+const assets = join(root, "apps/web/public/branding");
 const svg = await readFile(join(assets, "calos-icon.svg"), "utf8");
-const temporary = await mkdtemp(join(tmpdir(), "calos-icons-"));
-let electronApp;
+const browser = await chromium.launch();
 
 try {
-  const entry = join(temporary, "export.mjs");
-  await writeFile(
-    entry,
-    `import { app, BrowserWindow } from "electron";
-app.setPath("userData", ${JSON.stringify(temporary)});
-app.setPath("sessionData", ${JSON.stringify(temporary)});
-app.whenReady().then(async () => {
-const window = new BrowserWindow({ show: true, webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false } });
-await window.loadURL("about:blank");
-});
-`,
-  );
-  const env = { ...process.env };
-  delete env.ELECTRON_RUN_AS_NODE;
-  electronApp = await _electron.launch({
-    executablePath: require("electron"),
-    args: ["--no-sandbox", "--ozone-platform=x11", entry],
-    env,
-    timeout: 30_000,
-  });
-  const page = await electronApp.firstWindow();
+  const page = await browser.newPage();
   const pngs = [];
   for (const size of [1024, 512, 256, 64, 32, 16]) {
     await page.setViewportSize({ width: size, height: size });
@@ -65,9 +43,5 @@ await window.loadURL("about:blank");
   );
   console.log("Iconos de Calos exportados desde calos-icon.svg.");
 } finally {
-  try {
-    await electronApp?.close();
-  } finally {
-    await rm(temporary, { recursive: true, force: true });
-  }
+  await browser.close();
 }

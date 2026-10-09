@@ -1,208 +1,305 @@
-# Calos
+<div align="center">
+  <img src="apps/web/public/branding/calos-icon.svg" width="132" height="132" alt="Calos logo">
+  <h1>Calos</h1>
+  <p><strong>Your meals, nutrition goals, and body measurements — in one personal diary.</strong></p>
+  <p>
+    <img alt="React 19" src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=0B1320">
+    <img alt="TypeScript 5" src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white">
+    <img alt="Node.js 24" src="https://img.shields.io/badge/Node.js-24-339933?logo=nodedotjs&logoColor=white">
+    <img alt="OpenRouter" src="https://img.shields.io/badge/Assistant-OpenRouter-193C2E">
+  </p>
+</div>
 
-Diario nutricional de escritorio con historiales de cintura y peso. Las comidas y medidas se guardan localmente. El asistente interpreta los mensajes mediante OpenRouter. La app calcula calorías y macronutrientes con USDA, etiquetas o datos personales; si no hay una referencia exacta, permite registrar una estimación identificada como aproximada.
+Calos is a self-hosted nutrition diary for the browser. Describe what you ate,
+attach a food label or a plate photo, and review calories and macros alongside
+your weight and waist history. An OpenRouter assistant helps you set your initial
+goals, record meals, and understand your progress.
 
-## Desarrollo y configuración
+The web app talks to a Node.js API. Profiles and diary entries stay on the server
+you run; there is no Calos account or hosted Calos service. Assistant requests send
+relevant information to OpenRouter.
+
+> [!NOTE]
+> Calos is under active development. The current interface is in Spanish; the
+> screenshots below show the actual application with fictional sample data.
+
+## What Calos does
+
+- Creates profiles through a conversation instead of a setup form.
+- Recommends initial calorie and macro targets, lets you discuss adjustments,
+  and saves the proposal when you accept it.
+- Records meals from natural language and asks for missing quantities.
+- Calculates nutrition from a bundled USDA dataset, food labels, or your own references.
+- Reads photographed nutrition labels and scales their values to your serving.
+- Identifies possible ingredients in plate photos and asks about uncertain details.
+- Labels estimated values and keeps their assumptions visible in the diary.
+- Corrects quantities, food references, and meal dates through the assistant.
+- Tracks daily calorie and macro totals against each profile's targets.
+- Offers nutrition guidance and goal proposals that you can apply or discard.
+- Charts weight and waist measurements, with editable dated entries.
+- Keeps profiles separate and remembers the selected profile in each browser.
+
+## Screenshots
+
+### Conversational onboarding
+
+Share your details, review the suggested daily targets, and adjust them before
+creating your profile.
+
+![Calos onboarding conversation with a proposed calorie and macro plan](docs/screenshots/onboarding.png)
+
+### Daily food diary
+
+See recorded meals, calorie and macro totals, nutrition sources, and the assistant
+in the same workspace.
+
+![Calos daily diary with sample meals and USDA nutrition calculations](docs/screenshots/diary.png)
+
+### Weight history
+
+Record measurements, follow the trend, and ask the assistant about the history
+shown on screen.
+
+![Calos weight history with five sample measurements and an assistant response](docs/screenshots/weight.png)
+
+These captures use the real web interface, HTTP API, nutrition calculations, and
+isolated temporary storage. Only the external OpenRouter responses were simulated.
+
+## Requirements
+
+### To use Calos
+
+- A modern browser and access to the server running Calos.
+- An [OpenRouter API key](https://openrouter.ai/settings/keys) for onboarding and
+  assistant conversations, including photos.
+- A configured OpenRouter model that supports structured JSON responses; photo
+  features also require image input support.
+
+Existing diaries and manual measurements remain available without an assistant
+connection. OpenRouter usage may incur charges depending on the selected model.
+
+Profiles do not have passwords or separate access permissions. Anyone who can
+reach the application can select any profile. The supplied deployment is intended
+for a trusted local network.
+
+### To develop Calos
+
+- Node.js 24.
+- pnpm 10.15.0, pinned in `package.json` and available through Corepack.
+- Chromium installed through Playwright for E2E tests and screenshot capture.
+
+The office deployment additionally requires Docker with BuildKit and Compose,
+a running nginx service on Ubuntu, and administrator access for installing the
+nginx site and static web files.
+
+## Using Calos
+
+### Create a profile
+
+Tell the assistant your name, age, height, weight, activity, and goal. You can supply
+several details in one message; it asks for anything still needed. Dietary
+preferences, habits, and instructions for the assistant are optional.
+
+Review the suggested calories and macros, ask for changes if needed, then choose
+**Aplicar objetivos y empezar** to save the targets and create the profile. These
+are initial estimates that can be adjusted as you record your progress.
+
+Use **Perfil activo** to switch people or **Nuevo perfil** to start another
+conversation. Switching profiles clears pending chat messages, drafts, and photos;
+saved entries remain in their own profile.
+
+### Record and correct meals
+
+Describe the food, the amount, and the meal. Calos accepts grams, milliliters, and
+liters. If a quantity is missing, the assistant asks before recording anything.
+You can then correct an entry by telling it which food or amount should change.
+
+For a matched USDA food, the app calculates nutrients from the local reference:
+
+```text
+serving nutrients = nutrients per 100 g × serving weight in grams / 100
+```
+
+Each entry keeps its source and serving information. Calories are rounded to whole
+kcal and macros to one decimal place. A volume requiring a density conversion is
+marked as approximate; a label with values per 100 ml is used directly.
+
+### Use photos and personal food references
+
+Use **Adjuntar etiqueta** for a nutrition label or **Foto de plato** for a meal
+photo. Images must be JPEG, PNG, or WebP and no larger than 6 MB.
+
+A readable label takes priority over USDA. Missing label values are not filled
+with guessed nutrients. Plate photos can produce ingredient and weight estimates;
+Calos keeps the draft while you answer questions and does not record it until the
+required details are resolved.
+
+You can also supply your own nutrition values and save reusable food references.
+Explicit user values and personal references take priority over USDA, after any
+attached label. Values supplied as ranges retain those ranges and use their
+midpoints for totals, with an estimate notice.
+
+When an exact reference is unavailable, the assistant can propose an estimate.
+The diary shows that it is approximate and preserves the assumptions through
+quantity corrections. Ask for **sin estimaciones** to require more precise inputs.
+
+### Review goals and measurements
+
+Open **Asistente** to review or edit daily calories, protein, carbohydrates, fat,
+optional target weight and date, and habits. Ask for feedback or discuss a new
+proposal. Advice alone does not write meals, measurements, or targets; choose
+**Aplicar objetivos** to save a proposed plan.
+
+Open **Peso** or **Cintura** to add, update, or delete a dated measurement and view
+its history. Advice can use the selected day, recent meal records, and measurement
+history. Missing records are not treated as a complete picture of your intake.
+
+## Development
+
+From the repository root, install dependencies and create your local configuration:
 
 ```bash
-pnpm install
+corepack enable
+pnpm install --frozen-lockfile
 cp .env.example .env
 ```
 
-Edita `.env` en la raíz del proyecto:
+Set your OpenRouter configuration in `.env`:
 
 ```dotenv
-OPENROUTER_API_KEY=tu_clave_de_openrouter
+OPENROUTER_API_KEY=your_openrouter_key
 OPENROUTER_MODEL=google/gemini-3-flash-preview
 ```
 
-Obtén una clave en https://openrouter.ai/settings/keys y añade saldo si tu modelo lo requiere. El modelo por defecto es [Gemini 3 Flash Preview en OpenRouter](https://openrouter.ai/google/gemini-3-flash-preview), una versión preview con soporte de imágenes y respuestas JSON estructuradas; puedes sustituirlo por otro que admita `response_format: json_schema`. Para registros con USDA, la app suele realizar dos peticiones: interpretación y selección del alimento. Puede necesitar peticiones adicionales para estimar un plato sin referencia o recuperar una selección parcial. Los registros basados únicamente en una etiqueta y las aclaraciones normalmente necesitan una sola.
+The key is read only by the server API. It is never included in the browser build.
+Environment variables override the file; `CALOS_ENV_FILE` selects a different
+configuration file. Restart the API after changing its configuration.
+
+Build the web app and API, then start the backend:
+
+```bash
+pnpm build
+pnpm start:api
+```
+
+In a second terminal, start the web development server:
 
 ```bash
 pnpm dev
 ```
 
-Reinicia la app después de cambiar la configuración. Las variables del entorno tienen prioridad sobre el archivo. `CALOS_ENV_FILE=/ruta/al/archivo.env` permite usar un archivo concreto. En una app empaquetada, crea `openrouter.env` en el directorio de datos de usuario de Calos; durante el desarrollo ese archivo también tiene prioridad sobre `.env`.
+Open the URL printed by Vite. Its development proxy forwards `/api` requests to
+`http://127.0.0.1:3002`.
 
-La clave se lee exclusivamente en el proceso principal de Electron. No se expone a la interfaz ni se incluye en la compilación. `.env` está excluido del control de versiones. Sin clave, el chat muestra instrucciones de configuración y no registra valores de prueba.
+Validate changes before committing:
 
-## Perfiles locales
+```bash
+pnpm --filter @calos/web exec playwright install chromium
+pnpm typecheck
+pnpm lint
+pnpm format:check
+pnpm test
+```
 
-No se necesita cuenta ni contraseña. Al abrir Calos por primera vez, el onboarding
-pide nombre, edad, altura, peso, objetivo y actividad. Después puedes indicar un
-objetivo calórico, preferencias alimentarias y cómo quieres que responda el
-asistente. Estos datos personalizan el contexto y el system prompt de ese perfil.
-El objetivo calórico inicial es editable; no se presenta como una recomendación
-calculada a partir de tus datos.
+`test`, `test:e2e`, and `test:web` build the web app and API and run Playwright in
+headless Chromium. Tests use real UI interactions, HTTP validation, calculations,
+and persistence with isolated temporary data; only OpenRouter is simulated. They
+do not use your `.env`, API key, or diary. New tests should be E2E rather than unit tests.
 
-«Perfil activo» permite cambiar de persona y «Nuevo perfil» abre otro onboarding.
-Cada perfil tiene su diario, referencias personales, medidas y objetivo separados.
-Al cambiar de perfil se vacían la conversación, el borrador y la foto pendientes;
-los registros guardados se conservan. La selección permanece tras reiniciar.
-El diario de instalaciones anteriores se migra a «Mi perfil», conservando el
-archivo original.
+Traces and failure screenshots are saved under `apps/web/test-results/`; the HTML
+report is in `apps/web/playwright-report/`. Open it with:
 
-## Acompañamiento nutricional y objetivos
+```bash
+pnpm --filter @calos/web exec playwright show-report
+```
 
-La sección **Asistente** permite revisar el objetivo del onboarding y editar
-calorías, macros, peso objetivo opcional, fecha orientativa y hábitos. Estos datos
-son propios de cada perfil y se conservan tras reiniciar. Al guardar objetivos,
-el diario y sus indicadores se actualizan; los alimentos registrados no cambian.
-El onboarding también permite configurar estos valores desde el principio.
+GitHub Actions runs type checking, lint, formatting checks, and the E2E suite.
 
-Puedes pedir «revisa mi semana y dame tres mejoras», «ayúdame a definir objetivos»
-o «propón 2100 kcal y preparar dos cenas caseras a la semana». El flujo de
-acompañamiento usa el perfil, las preferencias, el plan y hasta 28 días recientes
-de comidas, además de los últimos 60 registros de peso y cintura. Distingue días
-registrados de días sin datos y pide lo relevante que falte. No trata los valores
-iniciales como un cálculo personalizado de necesidades ni el objetivo calórico
-como un gasto de mantenimiento verificado.
+## Self-hosting on a local network
 
-Los consejos no escriben alimentos ni medidas. Para cambiar objetivos, muestra
-una propuesta que puedes ajustar en varios mensajes, aplicar o descartar. Solo
-«Aplicar objetivos» guarda el plan; un recibo de la aplicación confirma la escritura.
-El programa conserva los campos que la propuesta no declara cambiar y rechaza
-una propuesta si los objetivos guardados han cambiado mientras tanto.
+The deployment script runs the API in Docker and installs the compiled web app
+into the host's shared nginx service. Calos does not run its own nginx container.
 
-El modelo recibe referencias generales del [NHS sobre alimentación equilibrada](https://www.nhs.uk/better-health/lose-weight/healthy-eating-when-trying-to-lose-weight/)
-y [cambios sostenibles de hábitos](https://www.nhs.uk/live-well/healthy-weight/managing-your-weight/tips-to-help-you-lose-weight/).
-Su respuesta sigue siendo generada por el modelo: no es una revisión clínica ni
-una evaluación de la ingesta completa cuando faltan registros.
+```bash
+./scripts/deploy.sh --lan-ip YOUR_SERVER_LAN_IP
+# Or expose the web app only on loopback:
+./scripts/deploy.sh --local-only
+```
 
-## Fotos de platos
+The web app listens on port `8082`. nginx serves `/srv/www/calos/current` and
+proxies `/api/` to the Docker API at `127.0.0.1:3002`. The script requires
+administrator authentication when installing the nginx site and static files.
 
-Pulsa «Foto de plato», adjunta una imagen y describe lo que has comido, o envíala
-sola. El modelo identifica posibles ingredientes y propone pesos aproximados.
-Si no tiene claro un ingrediente, la preparación o cuánto has consumido, pregunta
-por esos puntos. Puedes corregir la propuesta y responder en varios mensajes;
-la imagen y el borrador se mantienen hasta guardar, cancelar o quitar la foto.
-No se registra una propuesta mientras queden cantidades pendientes o preguntas.
-Antes de guardar una aclaración, una comprobación adicional verifica qué preguntas
-responde el mensaje; una respuesta parcial conserva las demás pendientes.
+Existing `.env` configuration is preserved. Updates back up the data volume in
+`backups/` before recreating the API. The first deployment creates an `.env` with
+an empty OpenRouter key; configure it to enable onboarding and the assistant.
+`CALOS_LAN_IP` controls the host nginx listener and should be updated if the
+server's address changes.
 
-Los nutrientes se calculan con referencias USDA o, si falta una compatible, con
-una estimación identificada. El diario conserva el aviso de identificación visual,
-los pesos estimados y las suposiciones. Una foto no proporciona pesos exactos.
-«Adjuntar etiqueta» conserva su flujo específico de lectura de valores impresos.
+```bash
+docker compose ps
+docker compose logs --tail=100 api
+docker compose stop api
+docker compose up -d --wait api
+```
 
-## Dataset y cálculo
+Stopping Docker stops the API but leaves nginx serving the static web files.
+`docker compose down` preserves stored data; **`docker compose down --volumes`
+deletes it**. See the [office deployment guide](docs/servidor-oficina.md) for
+installation, backups, and importing data from another instance.
 
-Se incluye **USDA FoodData Central, SR Legacy, abril de 2018**, con 7.793 alimentos. Es una versión fija y final del dataset, adecuada para alimentos genéricos; no representa un catálogo actualizado de productos de supermercados españoles.
+## Project structure
 
-- Fuente oficial y descargas: https://fdc.nal.usda.gov/download-datasets/
-- Licencia: CC0 1.0 / dominio público, https://fdc.nal.usda.gov/
-- Energía en kcal y proteínas, carbohidratos y grasas en gramos, todos por 100 g de parte comestible.
-- Las raciones conservan la cantidad y el peso oficial USDA. Las unidades se convierten usando esa ración; no se pide al modelo inventar un peso.
+```text
+calos/
+├── apps/web/              React interface, HTTP client, and Playwright E2E suite
+├── apps/api/              Node.js API, request validation, and private configuration
+├── packages/core/         Nutrition logic, USDA data, OpenRouter client, and persistence
+├── deploy/nginx/          Host nginx site configuration
+├── scripts/               Deployment, nginx installation, dataset import, and icon export
+├── docs/screenshots/      Three captures of the web app with sample data
+├── compose.yaml           API service and persistent data volume
+├── package.json           Workspace commands and pinned package manager
+└── pnpm-workspace.yaml    Workspace package boundaries
+```
 
-El modelo interpreta cantidades y preparación, genera búsquedas en inglés y selecciona un registro entre los candidatos locales. Para alimentos con una fuente exacta, el modelo no proporciona las calorías: la app calcula `valor por 100 g × gramos / 100`, redondea energía a kcal y macros a una décima. Cada registro conserva el identificador FDC, descripción original, peso y ración usada, visibles en «Referencia USDA».
+See [architecture](docs/architecture.md) for the boundaries between the interface,
+API, and nutrition domain, and [branding](docs/branding.md) for the logo assets.
 
-Si falta la cantidad consumida, el asistente pregunta solo por ese dato. Para platos sin receta exacta o alimentos sin una referencia compatible, puede usar una composición típica y registrar valores aproximados. Las suposiciones se conservan y se muestran en el diario; no se atribuyen a USDA, a una etiqueta ni a datos tuyos. Si pides «sin estimaciones» o «valores exactos», solicita la información necesaria y conserva esa preferencia durante la aclaración. Usa los últimos diez mensajes para continuar una petición pendiente sin repetir preguntas ya contestadas. La selección semántica depende del modelo y puede necesitar corrección: revisa la referencia y pide una corrección si no corresponde. No hay búsqueda de productos por código de barras. Una receta no detallada se puede estimar, pero no se presenta como un cálculo exacto.
+## Nutrition data
 
-Puedes corregir una comida desde el chat: «el atún era en lata al natural» o «fueron 200 g, no 300». Se actualiza el registro existente, conservando su identidad y fecha salvo que pidas cambiarla. El diario, sus totales, el historial y el contexto de la conversación se refrescan tras guardar. Una corrección de nutrientes afecta al consumo indicado; si pides corregir una referencia personal guardada, se recalculan todos sus consumos. La confirmación del chat se genera después de la escritura. Las fotos siguen teniendo precedencia; «sin aceite» no se interpreta como una cifra de grasa igual a cero.
+Calos bundles USDA FoodData Central **SR Legacy, April 2018**, containing 7,793
+foods. It is a fixed dataset for generic foods, not a live supermarket product
+catalogue or barcode lookup service. Source information and the original archive's
+SHA-256 are stored in `packages/core/src/nutrition/data/usda-sr-legacy.json`.
 
-## Estimaciones de platos
-
-Puedes escribir «añade de cena 300 g de risotto de setas». Si no hay una fuente
-exacta, el asistente puede estimar su composición típica por 100 g y la app calcula
-los valores de la cantidad consumida. Al guardar, el chat avisa de que son **valores
-aproximados** y explica las suposiciones. En el diario aparece siempre «Valores
-aproximados · estimación del asistente»; puedes abrir la fuente para ver el motivo,
-los valores por 100 g y la composición supuesta. Esa procedencia sobrevive al
-reinicio y a las correcciones de cantidad. Una corrección parcial de nutrientes
-mantiene el aviso mientras queden nutrientes estimados.
-
-Las fotos de etiquetas, los valores que aportes y las referencias personales tienen
-prioridad. No se completa una etiqueta ilegible con cifras estimadas. Las
-estimaciones no se guardan automáticamente como referencias personales exactas.
-Puedes aportar ingredientes o valores nutricionales para corregir un registro.
-Para evitar aproximaciones en una conversación, indica «sin estimaciones»; puedes
-volver a permitirlas escribiendo «puedes estimar».
-
-## Cantidades en gramos y mililitros
-
-El chat acepta `86gr`, `86 g`, `350ml` y cantidades en litros. Un volumen
-explícito no se trata como una cantidad ausente. Si el cálculo necesita gramos y
-no hay etiqueta, OpenRouter estima una densidad típica: el diario conserva los
-mililitros originales y muestra la conversión como aproximada, con el factor y
-el supuesto. No se equiparan automáticamente gramos y mililitros. Como referencia,
-la [FAO](https://www.fao.org/4/t1265e/t1265e05.htm) describe densidades habituales
-de leche entre 1,028 y 1,034 g/ml, dependiendo de su composición.
-
-Una etiqueta legible con valores por 100 ml se usa directamente, sin estimar
-la densidad. Si solicitas «sin estimaciones», el asistente pide solo el peso o
-la etiqueta del líquido que necesita la conversión, conservando las cantidades
-de los demás alimentos. Las correcciones de volumen actualizan el consumo
-existente y mantienen el aviso; no crean otra comida.
-
-## Alimentos personalizados y datos escritos
-
-Puedes registrar comidas aportando sus valores por una cantidad de referencia, sin foto: «Guarda 100 g de trinxat y guárdalo en mi base de datos: proteínas 3–5 g, carbohidratos 12–18 g, grasas 5–8 g, calorías 120–150 kcal». Se guarda una referencia personal reutilizable con los rangos originales y un consumo de 100 g. Para los totales se usa el punto medio: 135 kcal, P 4 g, C 15 g y G 6,5 g. La respuesta y la fuente «Datos del usuario» indican que es una estimación.
-
-Si solo quieres crear una referencia, escribe «Guarda este alimento en mi base de datos, sin registrar consumo: …; valores por 100 g: …». En siguientes mensajes puedes registrar otros pesos del mismo alimento sin volver a escribir sus nutrientes. Los cálculos los hace la app, con los valores guardados. La foto de etiqueta tiene prioridad; después se usan los valores explícitos del usuario o su referencia personal, y finalmente USDA. Los nutrientes incompletos requieren aclaración y una comida con varios alimentos se guarda solo si se han validado todos.
-
-## Fotos de etiquetas: prioridad sobre USDA
-
-Usa «Adjuntar etiqueta» en el chat para enviar una imagen JPG, PNG o WebP de hasta 6 MB e indica cuánto has consumido. La foto se envía al modelo de OpenRouter; no se guarda en el diario. Necesitas un modelo que admita imágenes además de respuestas JSON.
-
-**Para el producto fotografiado, la etiqueta tiene prioridad sobre el dataset.** La app conserva los nutrientes transcritos y la base impresa (100 g, 100 ml o ración), calcula según tu cantidad y muestra «Etiqueta de la foto» como fuente. No mezcla nutrientes faltantes con valores USDA. Si solo aparece energía en kJ, la convierte a kcal con `kJ / 4,184`.
-
-Si la foto es ilegible, faltan calorías o macros, o la cantidad no corresponde a la unidad de la etiqueta, pide aclaración sin guardar nada. La foto permanece adjunta durante las aclaraciones y se retira al guardar. Puedes quitarla manualmente. Para los demás alimentos de la misma comida se usan sus datos escritos o referencias personales, y USDA cuando no existen. La transcripción depende del modelo: revisa los valores de la etiqueta que aparecen en el registro.
-
-El dataset compactado y su SHA-256 de origen están en `packages/core/src/nutrition/data/usda-sr-legacy.json`. Para regenerarlo desde el archivo oficial:
+To regenerate the compact dataset from an official download:
 
 ```bash
 python3 scripts/import-usda.py
-# También puedes reutilizar una descarga:
-python3 scripts/import-usda.py /ruta/FoodData_Central_sr_legacy_food_json_2018-04.zip
+# Or reuse an existing archive:
+python3 scripts/import-usda.py /path/to/FoodData_Central_sr_legacy_food_json_2018-04.zip
 ```
 
-El importador solo incorpora alimentos con los cuatro valores nutricionales presentes; no convierte nutrientes ausentes en cero.
+The importer requires all four nutrient values and does not turn missing values
+into zero. Source and download information: [USDA FoodData Central](https://fdc.nal.usda.gov/download-datasets/).
 
-## Datos y privacidad
+## Data locations and privacy
 
-Los datos se guardan en el directorio de usuario de la aplicación: `profiles.json` contiene el listado y la selección, y `profiles/<id>/nutrition.json` contiene los datos de cada persona. Los historiales de cintura y peso se guardan localmente. Al usar el chat se envían a OpenRouter el perfil activo (nombre, edad, altura, peso, actividad, objetivo, preferencias e instrucciones del asistente), el mensaje, la foto adjunta si la hay, hasta diez mensajes anteriores, los objetivos y hábitos, las referencias de alimentos personales y los candidatos de alimentos que necesita el modelo. El peso del perfil enviado al LLM es el registro con la fecha más reciente, leído de nuevo en cada mensaje; si no hay registros de peso, se usa el peso informado en el perfil. El chat recibe las comidas y totales del día abierto. Al consultar una fecha del historial, también recibe los días del historial de comidas para poder compararlos. La fecha seleccionada se valida en el proceso principal y los datos se leen del almacenamiento local en cada mensaje; en las pestañas Cintura y Peso se envía el historial de la medida correspondiente, su unidad, el último registro y el cambio desde el primero, junto con la identificación de la pestaña activa. El asistente permite consultar la evolución; las medidas se guardan o editan desde los formularios. El uso de OpenRouter puede generar costes según el modelo elegido.
+The API stores `profiles.json` and `profiles/<id>/nutrition.json` in
+`CALOS_DATA_DIR` (`data/` by default). Docker uses the persistent `calos_calos_data`
+volume, mounted at `/data`. Writes are atomic and serialized with file locks;
+existing legacy diaries can be migrated without modifying the original file.
+Each browser keeps its selected profile in local storage.
 
-## Arquitectura y comprobaciones
+Onboarding sends the supplied details and up to 40 preceding conversation messages
+to OpenRouter. Meal conversations send the active profile, message, optional photo,
+up to ten previous messages, goals, relevant diary or measurement context, personal
+food references, and food candidates needed for the request. Coaching can include
+up to 28 recent diary days and the latest 60 weight and waist records. Attached
+photos are sent to the model but are not saved in the diary.
 
-- `packages/core`: dataset, búsqueda, cliente OpenRouter, interpretación, cálculo y almacenamiento JSON atómico.
-- `apps/desktop/src/main`: configuración privada y handlers IPC validados.
-- `apps/desktop/src/preload`: API mínima expuesta al renderer.
-- `apps/desktop/src/renderer`: diario por fecha, chat e historiales con gráficas de cintura y peso.
-
-```bash
-pnpm test
-pnpm typecheck
-pnpm build
-```
-
-`pnpm test` y `pnpm test:e2e` compilan la app y ejecutan las pruebas E2E de
-Electron con Playwright. No hace falta descargar navegadores: se utiliza el Electron
-del proyecto. En Linux se necesita una sesión gráfica o Xvfb:
-
-```bash
-# Para servidores Linux sin escritorio (instalar Xvfb previamente):
-xvfb-run -a pnpm test:e2e
-# Abrir el informe después de ejecutar las pruebas:
-pnpm --filter @calos/desktop exec playwright show-report
-```
-
-La suite está en `apps/desktop/e2e`. Cubre crear, editar, validar y eliminar medidas
-de peso y cintura, orden por fecha, evolución y persistencia tras reiniciar. También
-prueba registro USDA por chat, corrección de cantidades, consulta del historial,
-eliminación de comidas, aclaraciones, consultas sin escritura, errores del proveedor y configuración sin clave. La suite también comprueba edición y persistencia de objetivos, consejo sin escrituras, propuestas y aceptación, conservación de campos y rechazo de planes obsoletos, onboarding, aislamiento de perfiles y prompts, migración de datos anteriores, aclaraciones y registro de fotos de platos, estimaciones de platos, avisos y persistencia, correcciones, prioridad de etiquetas, peticiones de precisión y ausencia de escrituras parciales.
-
-Cada prueba usa un directorio temporal de datos que se elimina al terminar. El
-arranque de pruebas bloquea la red del proceso principal y simula únicamente las
-respuestas HTTP de OpenRouter; la interfaz, el preload, los handlers IPC, el cálculo
-USDA y el almacenamiento son reales. No se utiliza tu `.env`, tu clave ni tu diario,
-y no se requiere saldo. Estas pruebas no validan la calidad de interpretación del
-modelo real. Los tests anteriores se conservan como referencia, pero no se ejecutan
-con `pnpm test`; las nuevas pruebas deben ser E2E.
-
-Los informes y trazas quedan en `apps/desktop/playwright-report` y
-`apps/desktop/test-results`, excluidos del control de versiones. Los fallos incluyen
-una captura de pantalla. TypeScript, ESLint y Prettier comprueban también la suite.
-La configuración de GitHub Actions en `.github/workflows/e2e.yml` ejecuta estas
-comprobaciones con Xvfb y conserva los artefactos de las pruebas.
-
-La organización y los límites entre capas se describen en [docs/architecture.md](docs/architecture.md), siguiendo los patrones de Nemeton.
+Assistant interpretation and recommendations depend on the chosen model. Review
+food sources and estimates when precision matters; generated guidance is not a
+clinical assessment. Credentials, personal data, backups, and generated reports
+are excluded from version control.

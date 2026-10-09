@@ -5,20 +5,23 @@
   "packageManager": "pnpm@10.15.0",
   "pnpm": {
     "onlyBuiltDependencies": [
-      "electron",
       "esbuild"
     ]
   },
   "scripts": {
-    "dev": "pnpm --filter @calos/desktop dev",
-    "build": "pnpm --filter @calos/desktop build",
+    "dev": "pnpm --filter @calos/web dev",
+    "build": "pnpm --filter @calos/web build && pnpm --filter @calos/api build",
+    "build:web": "pnpm build",
+    "dev:web": "pnpm --filter @calos/web dev",
+    "start:api": "node --env-file-if-exists=.env apps/api/dist/start.js",
+    "test:web": "pnpm test:e2e",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm test:e2e",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint apps packages",
     "lint:fix": "eslint apps packages --fix",
-    "test:e2e": "pnpm --filter @calos/desktop test:e2e",
+    "test:e2e": "pnpm build && pnpm --filter @calos/web test:e2e",
     "icons:export": "node scripts/export-icons.mjs"
   },
   "devDependencies": {

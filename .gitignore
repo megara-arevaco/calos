@@ -8,3 +8,7 @@ release
 !.env.example
 playwright-report
 test-results
+dist
+data/
+backups/
+.tmp-*

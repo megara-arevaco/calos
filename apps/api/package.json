@@ -1,0 +1,18 @@
+{
+  "name": "@calos/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "node dist/start.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@calos/core": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.3"
+  }
+}

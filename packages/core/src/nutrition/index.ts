@@ -4,5 +4,8 @@ export * from "./assistant.js";
 export type { OpenRouterConfig } from "./openrouter.js";
 export * from "./profile-schema.js";
 export * from "./profiles.js";
+export * from "./onboarding.js";
 export * from "./plate-schema.js";
 export * from "./plan-schema.js";
+export * from "./rpc-contracts.js";
+export type { CalosApi } from "./api-types.js";
