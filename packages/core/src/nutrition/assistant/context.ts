@@ -46,7 +46,7 @@ export function buildChatContext(
   const dayTotal = summarizeMacros(dayEntries);
   const diaryContext = {
     ...context,
-    registrationDate,
+    registrationDate: context.date || registrationDate,
     dailyGoal: state.dailyGoal,
     selectedDay: {
       date: context.date,

@@ -20,7 +20,12 @@ export class WebRuntime {
   private originalFetch = globalThis.fetch;
   readonly provider: ProviderState = { replies: [], requests: [], unexpected: [] };
 
-  async launch(directory: string, apiKey: string, storage?: WebStorage) {
+  async launch(
+    directory: string,
+    apiKey: string,
+    storage?: WebStorage,
+    aiQuota?: { maxRequests?: number; maxTokens?: number; periodHours?: number },
+  ) {
     globalThis.fetch = async (input, options) => {
       const request = JSON.parse(String(options?.body || "{}"));
       this.provider.requests.push(request);
@@ -48,6 +53,8 @@ export class WebRuntime {
     };
     const api = await createApi({
       profiles: profilesAt(directory),
+      usagePath: resolve(directory, "ai-usage.json"),
+      aiQuota: aiQuota ?? { maxTokens: 1_000_000 },
       openRouterConfig: apiKey ? { apiKey, model: "e2e-model" } : undefined,
     });
     const root = resolve("dist");

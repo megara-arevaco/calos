@@ -141,8 +141,9 @@ export async function respondToPlate(
     complete,
     undefined,
     true,
+    context?.date,
   );
-  const entriesAdded = await store.addMany(
+  const { entries: entriesAdded, undoId } = await store.addManyWithUndo(
     resolved.map(({ entry }, index) => ({
       ...entry,
       source: entry.source
@@ -163,6 +164,7 @@ export async function respondToPlate(
   return {
     message: `He registrado ${entriesAdded.map((entry) => `${entry.name}: ${entry.quantity}`).join("; ")}. Total: ${calories} kcal.${estimateNotice(entriesAdded)}`,
     entriesAdded,
+    undoId,
     clearPhoto: true,
   };
 }

@@ -44,6 +44,14 @@ function transportSchema(value: unknown): unknown {
   return value;
 }
 
+export function openRouterJsonSchema(name: string, schema: z.ZodType) {
+  return {
+    name,
+    strict: true,
+    schema: transportSchema(z.toJSONSchema(schema)),
+  };
+}
+
 export function createOpenRouterClient(
   config: OpenRouterConfig,
   fetcher: typeof fetch = fetch,
@@ -84,11 +92,7 @@ export function createOpenRouterClient(
           ],
           response_format: {
             type: "json_schema",
-            json_schema: {
-              name,
-              strict: true,
-              schema: transportSchema(z.toJSONSchema(schema)),
-            },
+            json_schema: openRouterJsonSchema(name, schema),
           },
         }),
       });

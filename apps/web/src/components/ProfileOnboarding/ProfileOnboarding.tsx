@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { OnboardingMessage, UserProfileInput } from "@calos/core";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "../LanguageSelector.js";
+import { AssistantQuotaNotice } from "../ChatAssistant/AssistantQuotaNotice.js";
+import { queryKeys } from "../../queries/queryKeys.js";
 
 type Turn = OnboardingMessage & { profile?: UserProfileInput };
 
@@ -17,6 +20,7 @@ export function ProfileOnboarding({
   error: boolean;
 }) {
   const { t } = useTranslation();
+  const client = useQueryClient();
   const greeting = t("onboarding.greeting");
   const [messages, setMessages] = useState<Turn[]>([
     { role: "assistant", text: greeting },
@@ -26,6 +30,8 @@ export function ProfileOnboarding({
   const [waiting, setWaiting] = useState(false);
   const [failure, setFailure] = useState("");
   const [proposal, setProposal] = useState<UserProfileInput | null>(null);
+  const [manual, setManual] = useState(false);
+  const [manualError, setManualError] = useState("");
   const conversation = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const sending = useRef(false);
@@ -100,10 +106,9 @@ export function ProfileOnboarding({
         setText("");
       }
     } catch {
-      setFailure(
-        t("onboarding.networkError"),
-      );
+      setFailure(t("onboarding.networkError"));
     } finally {
+      await client.invalidateQueries({ queryKey: queryKeys.assistantUsage() });
       sending.current = false;
       setWaiting(false);
       setPendingText("");
@@ -123,6 +128,196 @@ export function ProfileOnboarding({
       sending.current = false;
     }
   };
+  const saveManual = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (sending.current || busy) {
+      return;
+    }
+
+    const values = new FormData(event.currentTarget);
+    const number = (key: string) => Number(values.get(key));
+    sending.current = true;
+    setManualError("");
+    try {
+      await onSave({
+        name: String(values.get("name")),
+        age: number("age"),
+        heightCm: number("heightCm"),
+        weightKg: number("weightKg"),
+        goal: String(values.get("goal")),
+        activity: String(values.get("activity")) as UserProfileInput["activity"],
+        dietaryPreferences: String(values.get("dietaryPreferences") ?? ""),
+        assistantInstructions: "",
+        dailyCalories: number("dailyCalories"),
+        dailyProtein: number("dailyProtein"),
+        dailyCarbs: number("dailyCarbs"),
+        dailyFat: number("dailyFat"),
+        targetWeightKg: null,
+        targetDate: null,
+        habits: [],
+      });
+    } catch {
+      setManualError(t("onboarding.manualSaveError"));
+    } finally {
+      sending.current = false;
+    }
+  };
+
+  if (manual) {
+    return (
+      <main className="onboarding-shell">
+        <section
+          className="onboarding manual-onboarding"
+          aria-label={t("onboarding.manualTitle")}
+        >
+          <div className="onboarding-brand">
+            <img src="./branding/calos-icon.svg" alt="" width="44" height="44" />
+            <span>calos</span>
+            <LanguageSelector />
+            {onCancel && (
+              <button
+                type="button"
+                className="quiet-button onboarding-cancel"
+                onClick={onCancel}
+                disabled={busy}
+              >
+                {t("common.cancel")}
+              </button>
+            )}
+          </div>
+          <h1>{t("onboarding.manualTitle")}</h1>
+          <p className="waist-help">{t("onboarding.manualHelp")}</p>
+          <form className="manual-profile-form" onSubmit={saveManual}>
+            <label>
+              {t("onboarding.name")}
+              <input name="name" required maxLength={80} autoComplete="name" />
+            </label>
+            <div className="manual-profile-grid">
+              <label>
+                {t("onboarding.age")}
+                <input name="age" type="number" min="1" max="120" required />
+              </label>
+              <label>
+                {t("onboarding.height")}
+                <input
+                  name="heightCm"
+                  type="number"
+                  min="50"
+                  max="250"
+                  step="0.1"
+                  required
+                />
+              </label>
+              <label>
+                {t("onboarding.weight")}
+                <input
+                  name="weightKg"
+                  type="number"
+                  min="10"
+                  max="500"
+                  step="0.1"
+                  required
+                />
+              </label>
+              <label>
+                {t("onboarding.activity")}
+                <select name="activity" defaultValue="moderate" required>
+                  <option value="low">{t("onboarding.activityLow")}</option>
+                  <option value="moderate">{t("onboarding.activityModerate")}</option>
+                  <option value="high">{t("onboarding.activityHigh")}</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              {t("onboarding.goal")}
+              <input name="goal" required maxLength={500} />
+            </label>
+            <label>
+              {t("onboarding.preferences")}
+              <textarea name="dietaryPreferences" maxLength={1000} rows={2} />
+            </label>
+            <fieldset>
+              <legend>{t("onboarding.manualTargets")}</legend>
+              <p>{t("onboarding.manualTargetsHelp")}</p>
+              <div className="manual-profile-grid">
+                <label>
+                  {t("onboarding.calories")} (kcal)
+                  <input
+                    name="dailyCalories"
+                    type="number"
+                    min="300"
+                    max="10000"
+                    step="1"
+                    required
+                  />
+                </label>
+                <label>
+                  {t("onboarding.protein")} (g)
+                  <input
+                    name="dailyProtein"
+                    type="number"
+                    min="0"
+                    max="1000"
+                    step="0.1"
+                    required
+                  />
+                </label>
+                <label>
+                  {t("onboarding.carbs")} (g)
+                  <input
+                    name="dailyCarbs"
+                    type="number"
+                    min="0"
+                    max="2000"
+                    step="0.1"
+                    required
+                  />
+                </label>
+                <label>
+                  {t("onboarding.fat")} (g)
+                  <input
+                    name="dailyFat"
+                    type="number"
+                    min="0"
+                    max="1000"
+                    step="0.1"
+                    required
+                  />
+                </label>
+              </div>
+            </fieldset>
+            {manualError && (
+              <p className="waist-error" role="alert">
+                {manualError}
+              </p>
+            )}
+            {error && (
+              <p className="waist-error" role="alert">
+                {t("onboarding.saveError")}
+              </p>
+            )}
+            <div className="onboarding-actions">
+              <button
+                type="button"
+                className="quiet-button"
+                onClick={() => setManual(false)}
+                disabled={busy}
+              >
+                {t("onboarding.useAssistant")}
+              </button>
+              <button
+                type="submit"
+                className="quiet-button onboarding-primary"
+                disabled={busy}
+              >
+                {busy ? t("onboarding.creating") : t("onboarding.createManual")}
+              </button>
+            </div>
+          </form>
+        </section>
+      </main>
+    );
+  }
   return (
     <main className="onboarding-shell">
       <section className="onboarding" aria-label={t("onboarding.title")}>
@@ -141,6 +336,16 @@ export function ProfileOnboarding({
             </button>
           )}
         </div>
+        <div className="onboarding-mode">
+          <p>{t("onboarding.manualOption")}</p>
+          <button
+            type="button"
+            className="quiet-button"
+            onClick={() => setManual(true)}
+          >
+            {t("onboarding.createManual")}
+          </button>
+        </div>
         <div
           ref={conversation}
           className="onboarding-conversation"
@@ -156,7 +361,9 @@ export function ProfileOnboarding({
               className={`onboarding-message onboarding-message-${message.role}`}
             >
               <span className="onboarding-speaker">
-                {message.role === "assistant" ? t("onboarding.calos") : t("onboarding.you")}
+                {message.role === "assistant"
+                  ? t("onboarding.calos")
+                  : t("onboarding.you")}
               </span>
               <p>{message.text}</p>
             </div>
@@ -177,8 +384,8 @@ export function ProfileOnboarding({
           <section className="onboarding-proposal" aria-labelledby="proposal-title">
             <h2 id="proposal-title">{t("onboarding.startingPoint")}</h2>
             <p>
-              {proposal.name} · {proposal.age} {t("onboarding.years")} · {proposal.heightCm} cm ·{" "}
-              {proposal.weightKg} kg
+              {proposal.name} · {proposal.age} {t("onboarding.years")} ·{" "}
+              {proposal.heightCm} cm · {proposal.weightKg} kg
             </p>
             <p>{proposal.goal}</p>
             <dl className="onboarding-targets">
@@ -196,9 +403,7 @@ export function ProfileOnboarding({
                 </div>
               ))}
             </dl>
-            <p className="onboarding-hint">
-              {t("onboarding.saveHint")}
-            </p>
+            <p className="onboarding-hint">{t("onboarding.saveHint")}</p>
             <button
               type="button"
               className="quiet-button onboarding-primary"
@@ -216,6 +421,8 @@ export function ProfileOnboarding({
         )}
         {messages.length < 40 ? (
           <form className="onboarding-composer" onSubmit={submit}>
+            <p className="onboarding-privacy">{t("onboarding.privacy")}</p>
+            <AssistantQuotaNotice />
             {proposal && (
               <label htmlFor="onboarding-message">{t("onboarding.adjust")}</label>
             )}

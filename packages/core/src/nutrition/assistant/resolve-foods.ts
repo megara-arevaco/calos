@@ -67,6 +67,7 @@ export async function resolveFoods(
   complete: JsonCompletion,
   targets = new Map<string, FoodEntry>(),
   estimationAllowed = true,
+  registrationDate?: string,
 ) {
   const savedFoods: CustomFood[] = [];
 
@@ -94,7 +95,9 @@ export async function resolveFoods(
     estimationAllowed,
     targets,
   );
-  const now = localTimestamp();
+  const now = registrationDate
+    ? localTimestamp(new Date(`${registrationDate}T12:00:00`))
+    : localTimestamp();
   const resolved: ResolvedFood[] = [];
   const entryDate = (item: ParsedFood) => {
     const target = item.entryId ? targets.get(item.entryId) : undefined;

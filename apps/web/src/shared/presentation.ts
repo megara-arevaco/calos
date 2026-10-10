@@ -8,4 +8,5 @@ export const formatDate = (value: string, locale = "es-ES") =>
     weekday: "long",
     day: "numeric",
     month: "long",
+    year: "numeric",
   }).format(new Date(`${value}T12:00:00`));

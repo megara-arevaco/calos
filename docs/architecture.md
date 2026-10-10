@@ -7,7 +7,7 @@ Calos sigue la organización de `/home/baul/Projects/nemeton`, adaptada al domin
 - `packages/core/src/nutrition`: tipos y reglas nutricionales, catálogo USDA, alimentos personalizados, almacenamiento y servicio del asistente. No importa React. `nutrition/index.ts` expone la API pública del dominio.
 - `nutrition/assistant`: esquemas de respuestas, instrucciones, construcción del contexto, resolución de fuentes y reglas de corrección. `assistant.ts` coordina interpretación, validación, cálculo y escritura. El cliente de OpenRouter se puede sustituir en pruebas.
 - `packages/core/src/shared/persistence.ts`: lectura limitada, escritura atómica y bloqueos por ruta normalizada, incluidos servicios que llaman a otros servicios dentro del mismo bloqueo. Un error de lectura no se trata como un diario vacío.
-- `apps/api/src`: composición de dependencias, configuración privada de OpenRouter, validación de origen y servidor HTTP. Las acciones reciben un `ApiContext` explícito.
+- `apps/api/src`: composición de dependencias, configuración privada de OpenRouter, validación de origen y servidor HTTP. `start.ts` mantiene un lock de instancia en la raíz de datos para impedir dos APIs sobre la misma instalación; el ledger de cuota exige estructura, fecha y counters válidos y falla cerrado. Las acciones reciben un `ApiContext` explícito.
 - `packages/core/src/nutrition/rpc-contracts.ts`: definición de operaciones y argumentos, validados con Zod antes de ejecutar cada acción.
 - `packages/core/src/nutrition/api-types.ts`: interfaz tipada del cliente HTTP, sin credenciales ni acceso genérico al sistema de archivos.
 - `apps/web/src/queries`: lecturas y mutaciones HTTP con React Query, claves centralizadas e invalidación tras cambios. Las mutaciones no se reintentan automáticamente para evitar duplicar registros.
@@ -54,9 +54,14 @@ su contrato HTTP validado y sus consultas con claves de perfil.
 
 ## Comprobaciones
 
-`pnpm test` compila la web y la API y ejecuta la suite E2E de Playwright en Chromium headless.
-Cada prueba aísla los datos del servidor en un directorio temporal y sustituye únicamente el proveedor OpenRouter. La interfaz, HTTP, cálculo y persistencia son reales. No se crean nuevos tests unitarios.
+`pnpm test` compila la web y la API y ejecuta la suite E2E de Playwright en Chromium headless. Cada prueba aísla los datos del servidor en un directorio temporal y sustituye únicamente el proveedor OpenRouter. La interfaz, HTTP, cálculo y persistencia son reales. No se crean nuevos tests unitarios. La revisión de mejoras y el cierre de cuota amplían la suite a 55 casos E2E; la importación/exportación, el onboarding manual y la exclusión de instancia se ejercitan con datos temporales.
 
-El onboarding usa `profiles:onboarding` antes de existir un perfil. El modelo recoge los datos en una conversación y propone objetivos; el servidor valida el perfil y la coherencia energética de los macros. La interfaz conserva la propuesta para ajustes. Solo `profiles:create`, al aplicar los objetivos, persiste el perfil y el plan.
+El onboarding ofrece dos rutas antes de existir un perfil: `profiles:create` guarda los datos y objetivos introducidos manualmente, sin llamar al proveedor; `profiles:onboarding` usa OpenRouter para proponer objetivos conversacionales y valida el perfil y la coherencia energética de los macros. Solo al aplicar la propuesta o enviar el formulario manual se crea el perfil.
+
+`nutrition:food-save` valida y persiste registros manuales/editados con cantidad, comida, fecha, nutrientes para esa cantidad y fuente/evidencia explícitas. La edición incluye la entrada esperada para detectar conflictos. El contexto de chat usa la fecha seleccionada como destino de nuevas entradas y el recibo presenta las escrituras reales con acceso a edición.
+
+`nutrition:delete` mueve las entradas a `deletedEntries` dentro del mismo archivo del perfil; `nutrition:restore` las recupera. `templates` guarda copias de referencias de comidas existentes, con nutrientes y procedencia, para repetir entradas o comidas sin OpenRouter. No escala porciones.
+
+`nutrition:export` devuelve la instantánea de un perfil; `nutrition:import` valida un esquema estricto, IDs y rangos antes de reemplazar solo el archivo del perfil solicitado mediante escritura atómica. El CSV se produce en el cliente a partir de las comidas activas. El diálogo advierte que JSON sustituye todos los datos del perfil activo.
 
 `pnpm test`, `pnpm typecheck`, `pnpm lint`, `pnpm format:check` y `pnpm build` deben pasar. ESLint y Prettier siguen las decisiones de Nemeton: bloques con llaves, separación entre declaraciones, dos espacios, comillas dobles y ancho de 88 caracteres. Los datos generados y privados se excluyen del formato.

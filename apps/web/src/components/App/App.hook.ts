@@ -35,11 +35,7 @@ export function useApp() {
     [summary.entries],
   );
   const remove = async (id: string) => {
-    try {
-      await deleteFood.mutateAsync(id);
-    } catch {
-      /* Mutation error is surfaced with the diary. */
-    }
+    await deleteFood.mutateAsync(id);
   };
   const refresh = () => {
     deleteFood.reset();

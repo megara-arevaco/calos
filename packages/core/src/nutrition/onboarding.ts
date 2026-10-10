@@ -4,6 +4,7 @@ import {
   AssistantError,
   createOpenRouterClient,
   type OpenRouterConfig,
+  type JsonCompletion,
 } from "./openrouter.js";
 
 export const onboardingHistorySchema = z
@@ -56,6 +57,7 @@ export async function respondToOnboarding(
   text: string,
   history: OnboardingMessage[],
   config?: OpenRouterConfig,
+  complete?: JsonCompletion,
 ): Promise<OnboardingReply> {
   if (!config?.apiKey) {
     return {
@@ -66,7 +68,7 @@ export async function respondToOnboarding(
     };
   }
   try {
-    const reply = await createOpenRouterClient(config)(
+    const reply = await (complete ?? createOpenRouterClient(config))(
       "profile_onboarding",
       responseSchema,
       system,

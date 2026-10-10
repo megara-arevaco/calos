@@ -264,6 +264,14 @@ export function applyNutrientPatch(
     entry.meal,
     entry.eatenAt,
   );
+  const amountRanges = {} as typeof ranges;
+
+  for (const key of keys) {
+    amountRanges[key] = {
+      min: Math.round(ranges[key].min * factor * 10) / 10,
+      max: Math.round(ranges[key].max * factor * 10) / 10,
+    };
+  }
   return {
     ...corrected,
     source:
@@ -278,6 +286,7 @@ export function applyNutrientPatch(
             basis,
             perBasis: values,
             ranges,
+            amountRanges,
             amount,
             unit,
             evidence: `Corrección explícita del usuario: ${patch.evidence}. Fuente previa: ${source.provider}.`,

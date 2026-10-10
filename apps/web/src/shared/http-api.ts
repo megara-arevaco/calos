@@ -33,6 +33,7 @@ const call = <K extends RpcChannel, T>(channel: K, ...args: RpcInput<K>) =>
   invoke<T>(channel, args);
 
 export const httpApi: CalosApi = {
+  aiUsage: () => call("assistant:usage"),
   onboard: (text, history) => call("profiles:onboarding", text, history),
   profiles: async () =>
     selectBrowserProfile(await invoke<ProfileRegistry>("profiles:list", [])),
@@ -48,6 +49,27 @@ export const httpApi: CalosApi = {
   today: (id, date) => call("nutrition:today", id, date),
   foodHistory: (id) => call("nutrition:food-history", id),
   deleteEntry: (id, entry) => call("nutrition:delete", id, entry),
+  undoOperation: (id, operation) => call("nutrition:undo", id, operation),
+  undoHistory: (id) => call("nutrition:undo-history", id),
+  restoreEntry: (id, entry) => call("nutrition:restore", id, entry),
+  deletedEntries: (id) => call("nutrition:trash", id),
+  deleteTrashEntry: (id, entry) => call("nutrition:trash-delete", id, entry),
+  saveFood: (id, input) => call("nutrition:food-save", id, input),
+  repeatEntry: (id, entry, date) => call("nutrition:repeat-entry", id, entry, date),
+  templates: (id) => call("nutrition:templates", id),
+  saveTemplate: (id, input) => call("nutrition:template-save", id, input),
+  updateTemplate: (id, template, expected) =>
+    call("nutrition:template-update", id, template, expected),
+  repeatTemplate: (id, template, date, servings) =>
+    call("nutrition:template-repeat", id, template, date, servings),
+  backups: (id) => call("nutrition:backups", id),
+  downloadBackup: (id, backup) => call("nutrition:backup-download", id, backup),
+  restoreBackup: (id, backup) => call("nutrition:backup-restore", id, backup),
+  deleteBackup: (id, backup) => call("nutrition:backup-delete", id, backup),
+  retention: (id) => call("nutrition:retention", id),
+  saveRetention: (id, value) => call("nutrition:retention-save", id, value),
+  exportNutrition: (id) => call("nutrition:export", id),
+  importNutrition: (id, snapshot) => call("nutrition:import", id, snapshot),
   sendMessage: (id, text, history = [], image, context) =>
     call("nutrition:chat", id, text, history, image, context),
   waistHistory: (id) => call("nutrition:waist-history", id),

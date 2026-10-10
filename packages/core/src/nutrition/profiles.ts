@@ -7,6 +7,8 @@ import {
   writeJsonAtomically,
 } from "../shared/persistence.js";
 import { NutritionStore } from "./store.js";
+import { nutritionSnapshotSchema } from "./snapshot-schema.js";
+import type { NutritionImportResult, NutritionSnapshot } from "./types.js";
 import { profileRegistrySchema, userProfileInputSchema } from "./profile-schema.js";
 import type { ProfileRegistry, UserProfileInput } from "./profile-schema.js";
 
@@ -135,5 +137,25 @@ export class LocalProfiles {
       throw new Error("El perfil no existe");
     }
     return new NutritionStore(this.storePath(id));
+  }
+
+  async exportNutrition(id: string): Promise<NutritionSnapshot> {
+    return (await this.store(id)).exportSnapshot();
+  }
+
+  async importNutrition(id: string, data: unknown): Promise<NutritionImportResult> {
+    const registry = await this.list();
+    const profile = registry.profiles.find((item) => item.id === id);
+
+    if (!profile) {
+      throw new Error("El perfil no existe");
+    }
+
+    const snapshot = nutritionSnapshotSchema.parse(data);
+
+    if (snapshot.profile) {
+      snapshot.profile.name = profile.name;
+    }
+    return new NutritionStore(this.storePath(id)).importSnapshot(snapshot);
   }
 }

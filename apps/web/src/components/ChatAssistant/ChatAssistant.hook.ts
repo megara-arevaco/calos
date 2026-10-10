@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import type { ChatMessage, NutritionPlanProposal } from "@calos/core";
+import type { ChatMessage, FoodEntry, NutritionPlanProposal } from "@calos/core";
 import type { PhotoAttachment } from "../NutritionPhotoInput/index.js";
 import type { AppView } from "../App/App.hook.js";
 import { useChatMutation } from "../../queries/nutrition.queries.js";
 import { useSaveNutritionPlan } from "../../queries/plan.queries.js";
 import { today } from "../../shared/presentation.js";
+import { useProfile } from "../../shared/ProfileContext.js";
+import { queryKeys } from "../../queries/queryKeys.js";
 
 export function useChatAssistant(view: AppView, selectedDate: string) {
   const { t } = useTranslation();
@@ -19,6 +22,25 @@ export function useChatAssistant(view: AppView, selectedDate: string) {
       text: greeting,
     },
   ]);
+  const [receiptState, setReceipt] = useState<FoodEntry[] | null>(null);
+  const [receiptUndoId, setReceiptUndoId] = useState<string | undefined>();
+  const [undoFeedback, setUndoFeedback] = useState("");
+  const profile = useProfile();
+  const client = useQueryClient();
+  const undoHistory = useQuery({
+    queryKey: queryKeys.undoHistory(profile.id),
+    queryFn: () => window.calos.undoHistory(profile.id),
+  });
+  const undoMutation = useMutation({
+    mutationFn: (id: string) => window.calos.undoOperation(profile.id, id),
+    onSuccess: async () => {
+      await Promise.all([
+        client.invalidateQueries({ queryKey: queryKeys.days(profile.id) }),
+        client.invalidateQueries({ queryKey: queryKeys.foodHistory(profile.id) }),
+        client.invalidateQueries({ queryKey: queryKeys.undoHistory(profile.id) }),
+      ]);
+    },
+  });
   const mutation = useChatMutation();
   const planMutation = useSaveNutritionPlan();
   const [proposal, setProposal] = useState<NutritionPlanProposal | null>(null);
@@ -79,6 +101,9 @@ export function useChatAssistant(view: AppView, selectedDate: string) {
       return;
     }
     setDraft("");
+    setReceipt([]);
+    setReceiptUndoId(undefined);
+    setUndoFeedback("");
     planMutation.reset();
     setMessages((current) => [
       ...current,
@@ -103,6 +128,8 @@ export function useChatAssistant(view: AppView, selectedDate: string) {
         },
       });
       setProposal(reply.goalProposal ?? null);
+      setReceipt([...(reply.entriesAdded ?? []), ...(reply.entriesUpdated ?? [])]);
+      setReceiptUndoId(reply.undoId);
       setMessages((current) => [
         ...current,
         { role: "assistant", text: reply.message },
@@ -128,6 +155,25 @@ export function useChatAssistant(view: AppView, selectedDate: string) {
       ]);
     }
   };
+  const receipt = receiptState ?? undoHistory.data?.[0]?.entries ?? [];
+  const activeUndoId =
+    receiptState === null ? undoHistory.data?.[0]?.id : receiptUndoId;
+  const undoReceipt = async () => {
+    if (!activeUndoId || undoMutation.isPending) {
+      return;
+    }
+    setUndoFeedback("");
+    try {
+      await undoMutation.mutateAsync(activeUndoId);
+      setReceipt([]);
+      setReceiptUndoId(undefined);
+      setUndoFeedback(t("assistant.undoSuccess"));
+    } catch (error) {
+      setUndoFeedback(
+        error instanceof Error ? error.message : t("assistant.undoError"),
+      );
+    }
+  };
   return {
     chatMessages,
     photo,
@@ -135,6 +181,11 @@ export function useChatAssistant(view: AppView, selectedDate: string) {
     draft,
     setDraft,
     messages,
+    receipt,
+    undoReceipt,
+    undoReceiptAvailable: Boolean(activeUndoId && receipt.length),
+    undoPending: undoMutation.isPending,
+    undoFeedback,
     sending,
     send,
     proposal,

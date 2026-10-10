@@ -138,6 +138,16 @@ export function customFoodEntry(
   }
 
   const scale = (n: number) => Math.round(((n * grams) / 100) * 10) / 10;
+  const scaleRange = (key: keyof MacroRanges) => ({
+    min: scale(food.ranges[key].min),
+    max: scale(food.ranges[key].max),
+  });
+  const amountRanges: MacroRanges = {
+    calories: scaleRange("calories"),
+    protein: scaleRange("protein"),
+    carbs: scaleRange("carbs"),
+    fat: scaleRange("fat"),
+  };
   return {
     name,
     quantity: `${new Intl.NumberFormat("es-ES").format(grams)} g`,
@@ -153,6 +163,7 @@ export function customFoodEntry(
       basis: "100g",
       perBasis: food.per100g,
       ranges: food.ranges,
+      amountRanges,
       amount: grams,
       unit: "g",
       evidence: food.evidence,

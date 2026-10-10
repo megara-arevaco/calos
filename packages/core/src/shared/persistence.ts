@@ -53,6 +53,24 @@ export async function withFileLock<T>(
   }
 }
 
+export async function writeJsonAtomicallyExclusive(
+  filePath: string,
+  value: unknown,
+): Promise<void> {
+  const text = JSON.stringify(value, null, 2);
+  await withFileLock(filePath, async () => {
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    const temporary = `${filePath}.${randomUUID()}.tmp`;
+
+    try {
+      await fs.writeFile(temporary, text, { flag: "wx", mode: 0o600 });
+      await fs.link(temporary, filePath);
+    } finally {
+      await fs.rm(temporary, { force: true });
+    }
+  });
+}
+
 export async function writeJsonAtomically(
   filePath: string,
   value: unknown,

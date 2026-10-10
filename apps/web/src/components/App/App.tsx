@@ -9,6 +9,8 @@ import { useProfiles } from "../../queries/profile.queries.js";
 import { ProfileContext } from "../../shared/ProfileContext.js";
 import { ProfileOnboarding } from "../ProfileOnboarding/index.js";
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
+import type { FoodEntry } from "@calos/core";
 
 export function App() {
   const { t } = useTranslation();
@@ -26,7 +28,9 @@ export function App() {
       <main className="onboarding-shell">
         <div>
           <p role="alert">{t("app.profileLoadError")}</p>
-          <button onClick={() => void profiles.registry.refetch()}>{t("common.retry")}</button>
+          <button onClick={() => void profiles.registry.refetch()}>
+            {t("common.retry")}
+          </button>
         </div>
       </main>
     );
@@ -51,6 +55,14 @@ export function App() {
 function AppWorkspace({ profiles }: { profiles: ReturnType<typeof useProfiles> }) {
   const { t } = useTranslation();
   const state = useApp();
+  const [editingEntry, setEditingEntry] = useState<FoodEntry | null>(null);
+  const editFood = (entry: FoodEntry | null) => {
+    if (entry) {
+      state.setSelectedDate(entry.eatenAt.slice(0, 10));
+      state.setView("comida");
+    }
+    setEditingEntry(entry);
+  };
   return (
     <main className="app-shell" data-view={state.view}>
       <Sidebar
@@ -68,7 +80,7 @@ function AppWorkspace({ profiles }: { profiles: ReturnType<typeof useProfiles> }
         </p>
       )}
       <div className="workspace">
-        <FoodView {...state} />
+        <FoodView {...state} editingEntry={editingEntry} onEdit={editFood} />
         <section
           className="content waist-content"
           id="cintura-panel"
@@ -89,6 +101,7 @@ function AppWorkspace({ profiles }: { profiles: ReturnType<typeof useProfiles> }
           view={state.view}
           selectedDate={state.selectedDate}
           setView={state.setView}
+          onEditFood={editFood}
         />
       </div>
     </main>

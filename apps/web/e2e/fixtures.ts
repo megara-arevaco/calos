@@ -24,14 +24,19 @@ class WebApp {
   private launches = 0;
   private runtime?: WebRuntime;
   private storage?: WebStorage;
+  private quota?: { maxRequests?: number; maxTokens?: number; periodHours?: number };
   constructor(
     readonly directory: string,
     private readonly outputPath: (name: string) => string,
     private readonly autoOnboard = true,
   ) {}
-  async launch(apiKey = "e2e-fake-key") {
+  async launch(
+    apiKey = "e2e-fake-key",
+    quota?: { maxRequests?: number; maxTokens?: number; periodHours?: number },
+  ) {
+    this.quota = quota ?? this.quota;
     this.runtime = new WebRuntime();
-    await this.runtime.launch(this.directory, apiKey, this.storage);
+    await this.runtime.launch(this.directory, apiKey, this.storage, this.quota);
     this.page = this.runtime.page;
     registerOnboardingProvider(this.page, (replies) => this.mock(replies));
     await expect(this.page.locator(".app-shell, .onboarding")).toBeVisible();

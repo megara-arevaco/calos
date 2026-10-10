@@ -188,6 +188,7 @@ export async function respondToChat(
       complete,
       targets,
       estimationAllowed,
+      options.context?.date,
     );
 
     if (isCorrection) {
@@ -201,7 +202,7 @@ export async function respondToChat(
         before: targets.get(item.entryId!)!,
         after: entry,
       }));
-      const updated = await store.correctFoods(
+      const { entries: updated, undoId } = await store.correctFoodsWithUndo(
         updates,
         savedFoods,
         state.customFoods.filter((food) =>
@@ -216,11 +217,12 @@ export async function respondToChat(
         message: `He corregido ${receipts.length ? receipts.join("; ") : "la referencia personal"}. ${savedFoods.length ? "La referencia y todos sus consumos vinculados se han recalculado. " : ""}Los totales del diario y el historial están actualizados.${estimateNotice(updated)}`,
         entriesAdded: [],
         entriesUpdated: updated,
+        undoId,
         dataChanged: true,
       };
     }
 
-    const entriesAdded = await store.addMany(
+    const { entries: entriesAdded, undoId } = await store.addManyWithUndo(
       resolved.map((item) => item.entry),
       savedFoods,
     );
@@ -249,6 +251,7 @@ export async function respondToChat(
             estimateMessage,
         ),
         dataChanged: savedFoods.length > 0,
+        undoId,
       };
     }
 
@@ -259,6 +262,7 @@ export async function respondToChat(
     return {
       message: `${catalogueMessage}He registrado ${entriesAdded.map((entry) => `${entry.name}: ${entry.quantity}`).join("; ")}. Total: ${calories} kcal, calculadas con ${sources}. Puedes revisar la fuente en cada registro.${estimateMessage}${estimateNotice(entriesAdded)}`,
       entriesAdded,
+      undoId,
     };
   } catch (error) {
     return reply(

@@ -28,6 +28,7 @@ export function useDeleteFoodMutation() {
       await Promise.all([
         client.invalidateQueries({ queryKey: queryKeys.days(profileId) }),
         client.invalidateQueries({ queryKey: queryKeys.foodHistory(profileId) }),
+        client.invalidateQueries({ queryKey: queryKeys.trash(profileId) }),
       ]);
     },
   });
@@ -49,16 +50,22 @@ export function useChatMutation() {
       context: ChatDiaryContext;
     }) => window.calos.sendMessage(profileId, message, history, image, context),
     onSuccess: async (reply) => {
+      const invalidations = [
+        client.invalidateQueries({ queryKey: queryKeys.assistantUsage() }),
+      ];
+
       if (
         reply.entriesAdded.length ||
         reply.entriesUpdated?.length ||
         reply.dataChanged
       ) {
-        await Promise.all([
+        invalidations.push(
           client.invalidateQueries({ queryKey: queryKeys.days(profileId) }),
           client.invalidateQueries({ queryKey: queryKeys.foodHistory(profileId) }),
-        ]);
+          client.invalidateQueries({ queryKey: queryKeys.undoHistory(profileId) }),
+        );
       }
+      await Promise.all(invalidations);
     },
   });
 }

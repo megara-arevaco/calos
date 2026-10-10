@@ -7,16 +7,22 @@ import {
   ArrowUpRightIcon,
   ChatCircleDotsIcon,
   PaperPlaneTiltIcon,
+  PencilIcon,
+  UndoIcon,
 } from "../../shared/icons.js";
 import { useTranslation } from "react-i18next";
+import type { FoodEntry } from "@calos/core";
+import { AssistantQuotaNotice } from "./AssistantQuotaNotice.js";
 export function ChatAssistant({
   view,
   selectedDate,
   setView,
+  onEditFood,
 }: {
   view: AppView;
   selectedDate: string;
   setView: (view: AppView) => void;
+  onEditFood: (entry: FoodEntry | null) => void;
 }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage === "en" ? "en-US" : "es-ES";
@@ -25,6 +31,11 @@ export function ChatAssistant({
     photo,
     setPhoto,
     messages,
+    receipt,
+    undoReceipt,
+    undoReceiptAvailable,
+    undoPending,
+    undoFeedback,
     sending,
     send,
     draft,
@@ -51,7 +62,9 @@ export function ChatAssistant({
         </div>
         <button
           aria-label={
-            view === "asistente" ? t("assistant.backToFood") : t("assistant.onlyAssistant")
+            view === "asistente"
+              ? t("assistant.backToFood")
+              : t("assistant.onlyAssistant")
           }
           onClick={() => setView(view === "asistente" ? "comida" : "asistente")}
         >
@@ -74,6 +87,11 @@ export function ChatAssistant({
               ? t("assistant.weightHistory")
               : `${selectedDate === today() ? t("assistant.openDay") : t("assistant.foodHistory")} · ${formatDate(selectedDate, locale)}`}
         </span>
+        {(view === "comida" || view === "asistente") && (
+          <strong className="chat-destination">
+            {t("assistant.destination")} {formatDate(selectedDate, locale)}
+          </strong>
+        )}
       </p>
       <div className="messages" ref={chatMessages}>
         {view === "asistente" && <NutritionObjectives />}
@@ -82,6 +100,46 @@ export function ChatAssistant({
             {message.text}
           </div>
         ))}
+        {!!receipt.length && (
+          <section className="chat-receipt" aria-label={t("assistant.receipt")}>
+            <h3>{t("assistant.receipt")}</h3>
+            {receipt.map((entry) => (
+              <div className="chat-receipt-entry" key={entry.id}>
+                <div>
+                  <strong>{entry.name}</strong>
+                  <span>
+                    {entry.quantity} · {entry.calories} kcal ·{" "}
+                    {formatDate(entry.eatenAt.slice(0, 10), locale)}
+                  </span>
+                  <small>{entry.source?.provider ?? t("food.sourceUser")}</small>
+                </div>
+                <button
+                  type="button"
+                  className="quiet-button"
+                  onClick={() => onEditFood(entry)}
+                >
+                  <PencilIcon /> {t("assistant.receiptEdit")}
+                </button>
+              </div>
+            ))}
+            {undoReceiptAvailable && (
+              <button
+                type="button"
+                className="quiet-button"
+                onClick={() => void undoReceipt()}
+                disabled={undoPending}
+              >
+                <UndoIcon />{" "}
+                {undoPending ? t("common.saving") : t("assistant.undoReceipt")}
+              </button>
+            )}
+          </section>
+        )}
+        {undoFeedback && (
+          <p className="waist-notice chat-undo-feedback" role="status">
+            {undoFeedback}
+          </p>
+        )}
         {proposal && (
           <section className="coach-proposal" aria-label={t("assistant.goalProposal")}>
             <h3>{t("assistant.proposalForProfile")}</h3>
@@ -92,7 +150,9 @@ export function ChatAssistant({
               · G {proposal.plan.dailyGoal.fat} g
             </p>
             {proposal.plan.targetWeightKg && (
-              <p>{t("assistant.targetWeight", { value: proposal.plan.targetWeightKg })}</p>
+              <p>
+                {t("assistant.targetWeight", { value: proposal.plan.targetWeightKg })}
+              </p>
             )}
             {proposal.plan.targetDate && (
               <p>{t("assistant.targetDate", { value: proposal.plan.targetDate })}</p>
@@ -145,7 +205,9 @@ export function ChatAssistant({
             ))}
           </div>
         )}
-        {sending && <div className="message assistant loading">{t("assistant.calculate")}</div>}
+        {sending && (
+          <div className="message assistant loading">{t("assistant.calculate")}</div>
+        )}
       </div>
       <form className="composer" onSubmit={send}>
         <label htmlFor="chat-input">
@@ -173,11 +235,19 @@ export function ChatAssistant({
             maxLength={2000}
             rows={3}
           />
-          <button disabled={(!draft.trim() && !photo) || sending} aria-label={t("assistant.send")}>
+          <button
+            disabled={(!draft.trim() && !photo) || sending}
+            aria-label={t("assistant.send")}
+          >
             <PaperPlaneTiltIcon weight="fill" />
           </button>
         </div>
         <p>{t("assistant.privacy")}</p>
+        <AssistantQuotaNotice onManual={() => setView("comida")} />
+        <details className="chat-privacy-details">
+          <summary>{t("assistant.privacyDetailsTitle")}</summary>
+          <p>{t("assistant.privacyDetails")}</p>
+        </details>
       </form>
     </aside>
   );

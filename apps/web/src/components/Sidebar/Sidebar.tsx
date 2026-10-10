@@ -2,6 +2,12 @@ import type { LocalProfile } from "@calos/core";
 import type { AppView } from "../App/App.hook.js";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "../LanguageSelector.js";
+import {
+  ChatCircleDotsIcon,
+  ForkKnifeIcon,
+  ScaleIcon,
+  WaistIcon,
+} from "../../shared/icons.js";
 export function Sidebar({
   view,
   setView,
@@ -36,26 +42,36 @@ export function Sidebar({
       <nav aria-label={t("nav.sections")}>
         {(
           [
-            { id: "comida", key: "food", icon: "⌘", panel: "comida-panel" },
-            { id: "cintura", key: "waist", icon: "↔", panel: "cintura-panel" },
-            { id: "peso", key: "weight", icon: "⚖", panel: "peso-panel" },
-            { id: "asistente", key: "assistant", icon: "◌", panel: "chat" },
+            { id: "comida", key: "food", icon: ForkKnifeIcon, panel: "comida-panel" },
+            { id: "cintura", key: "waist", icon: WaistIcon, panel: "cintura-panel" },
+            { id: "peso", key: "weight", icon: ScaleIcon, panel: "peso-panel" },
+            {
+              id: "asistente",
+              key: "assistant",
+              icon: ChatCircleDotsIcon,
+              panel: "chat",
+            },
           ] as const
-        ).map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={view === tab.id ? "active" : ""}
-            aria-current={view === tab.id ? "page" : undefined}
-            aria-controls={tab.panel}
-            aria-label={t(`nav.${tab.key}`)}
-            title={t(`nav.${tab.key}`)}
-            onClick={() => setView(tab.id)}
-          >
-            <span aria-hidden="true">{tab.icon}</span>
-            <span className="nav-label">{t(`nav.${tab.key}`)}</span>
-          </button>
-        ))}
+        ).map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              className={view === tab.id ? "active" : ""}
+              aria-current={view === tab.id ? "page" : undefined}
+              aria-controls={tab.panel}
+              aria-label={t(`nav.${tab.key}`)}
+              title={t(`nav.${tab.key}`)}
+              onClick={() => setView(tab.id)}
+            >
+              <span aria-hidden="true">
+                <Icon />
+              </span>
+              <span className="nav-label">{t(`nav.${tab.key}`)}</span>
+            </button>
+          );
+        })}
       </nav>
       <div className="profile-switcher">
         <label htmlFor="active-profile">{t("nav.activeProfile")}</label>

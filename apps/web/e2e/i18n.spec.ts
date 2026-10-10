@@ -8,6 +8,10 @@ test("calos: cambia y recuerda el idioma de la interfaz", async ({ webApp }) => 
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByRole("button", { name: "Food", exact: true })).toBeVisible();
   await expect(page.getByLabel("Active profile")).toBeVisible();
+  await page.getByText("What data is sent", { exact: true }).click();
+  await expect(
+    page.getByText(/A request can include your message, up to 10 previous messages/),
+  ).toBeVisible();
 
   await page.reload();
   await expect(page.getByLabel("Language")).toHaveValue("en");

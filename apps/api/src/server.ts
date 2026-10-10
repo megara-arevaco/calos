@@ -4,6 +4,8 @@ import type { ApiContext } from "./context.js";
 import { createNutritionActions } from "./actions.js";
 import { rpcContracts, type RpcChannel } from "@calos/core";
 
+const MAX_REQUEST_BYTES = 10 * 1024 * 1024;
+
 export async function createApi(context: ApiContext) {
   await context.profiles.list();
   const actions = createNutritionActions(context);
@@ -66,8 +68,8 @@ export async function createApi(context: ApiContext) {
       for await (const chunk of request) {
         size += chunk.length;
 
-        if (size > 9 * 1024 * 1024) {
-          send(413, { ok: false, error: "La petición supera el tamaño permitido" });
+        if (size > MAX_REQUEST_BYTES) {
+          send(413, { ok: false, error: "La petición supera el límite de 10 MiB" });
           return;
         }
         chunks.push(chunk);

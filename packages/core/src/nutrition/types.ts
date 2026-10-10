@@ -54,7 +54,10 @@ type NutritionReference =
       customFoodId?: string;
       basis: "100g" | "100ml" | "serving";
       perBasis: Macros;
+      /** Source ranges per perBasis; unchanged when the consumed amount changes. */
       ranges: MacroRanges;
+      /** Ranges scaled to the complete amount recorded in this entry. */
+      amountRanges?: MacroRanges;
       amount: number;
       unit: "g" | "ml" | "ración";
       evidence: string;
@@ -123,15 +126,77 @@ export interface NutritionProfile {
   goal: string;
 }
 
+export interface FoodTemplate {
+  id: string;
+  name: string;
+  createdAt: string;
+  /** Servings represented by the saved component quantities and nutrients. */
+  baseServings: number;
+  entries: Omit<FoodEntry, "id" | "createdAt">[];
+}
+
+export interface NutritionUndoOperation {
+  id: string;
+  createdAt: string;
+  before: FoodEntry[];
+  after: FoodEntry[];
+  beforeReferences: CustomFood[];
+  afterReferences: CustomFood[];
+}
+
+export interface NutritionUndoReceipt {
+  id: string;
+  createdAt: string;
+  entries: FoodEntry[];
+}
+
+export interface NutritionRetention {
+  trashDays: number | null;
+  backupsDays: number | null;
+}
+
+export interface NutritionBackup {
+  id: string;
+  createdAt: string;
+  size: number;
+}
+
+export interface AssistantUsage {
+  scope: "this-calos-installation";
+  periodStartedAt: string;
+  periodEndsAt: string;
+  periodHours: number;
+  requestsReserved: number;
+  requestLimit: number;
+  tokensReserved: number;
+  tokenLimit: number;
+  imageTokenReserve: number;
+}
+
+export interface DeletedFoodEntry extends FoodEntry {
+  deletedAt: string;
+}
+
 export interface NutritionSnapshot {
   version: 1;
   objectives?: NutritionObjectives;
   entries: FoodEntry[];
+  deletedEntries?: DeletedFoodEntry[];
+  templates?: FoodTemplate[];
+  undoOperations?: NutritionUndoOperation[];
+  retention?: NutritionRetention;
   customFoods: CustomFood[];
   dailyGoal: Macros;
   waistMeasurements: WaistMeasurement[];
   weightMeasurements: WeightMeasurement[];
   profile: NutritionProfile | null;
+}
+
+export interface NutritionImportResult {
+  backupId: string;
+  /** Relative to this profile's private storage directory; never an absolute server path. */
+  backupPath: string;
+  recoveryInstructions: string;
 }
 
 export interface DaySummary {
@@ -149,6 +214,7 @@ export interface FoodHistoryDay {
 
 export interface ChatReply {
   goalProposal?: NutritionPlanProposal;
+  undoId?: string;
   plateDraft?: PlateDraft;
   clearPhoto?: boolean;
   message: string;

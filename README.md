@@ -16,16 +16,19 @@ your weight and waist history. An OpenRouter assistant helps you set your initia
 goals, record meals, and understand your progress.
 
 The web app talks to a Node.js API. Profiles and diary entries stay on the server
-you run; there is no Calos account or hosted Calos service. Assistant requests send
-relevant information to OpenRouter.
+you run; there is no Calos account or hosted Calos service. Assistant requests can
+send your message and recent conversation, relevant profile/goals, personal food
+references, meal history, and measurements to OpenRouter; attached images are sent
+as well. The assistant composer explains this context. Manual profile creation and
+direct meal entry do not contact OpenRouter.
 
 > [!NOTE]
-> Calos is under active development. The current interface is in Spanish; the
-> screenshots below show the actual application with fictional sample data.
+> Calos is under active development. The interface is available in Spanish and
+> English; the screenshots below show the application with fictional sample data.
 
 ## What Calos does
 
-- Creates profiles through a conversation instead of a setup form.
+- Creates profiles manually without OpenRouter, or through a conversation that can propose starting goals.
 - Recommends initial calorie and macro targets, lets you discuss adjustments,
   and saves the proposal when you accept it.
 - Records meals from natural language and asks for missing quantities.
@@ -33,7 +36,8 @@ relevant information to OpenRouter.
 - Reads photographed nutrition labels and scales their values to your serving.
 - Identifies possible ingredients in plate photos and asks about uncertain details.
 - Labels estimated values and keeps their assumptions visible in the diary.
-- Corrects quantities, food references, and meal dates through the assistant.
+- Edits food, amount, meal, date, nutrients, and source directly, or corrects entries through the assistant.
+- Repeats single foods and saves reusable meal favorites/recipes from diary entries.
 - Tracks daily calorie and macro totals against each profile's targets.
 - Offers nutrition guidance and goal proposals that you can apply or discard.
 - Charts weight and waist measurements, with editable dated entries.
@@ -70,13 +74,11 @@ isolated temporary storage. Only the external OpenRouter responses were simulate
 ### To use Calos
 
 - A modern browser and access to the server running Calos.
-- An [OpenRouter API key](https://openrouter.ai/settings/keys) for onboarding and
-  assistant conversations, including photos.
+- An [OpenRouter API key](https://openrouter.ai/settings/keys) only for conversational onboarding, assistant conversations, and photos. Manual profiles and food entries do not require it.
 - A configured OpenRouter model that supports structured JSON responses; photo
   features also require image input support.
 
-Existing diaries and manual measurements remain available without an assistant
-connection. OpenRouter usage may incur charges depending on the selected model.
+Existing diaries, manual measurements, profile creation, and direct food entry remain available without an assistant connection. OpenRouter usage may incur charges depending on the selected model. Calos enforces per-request text and image-size limits but does not configure a request quota or provider spending cap.
 
 Profiles do not have passwords or separate access permissions. Anyone who can
 reach the application can select any profile. The supplied deployment is intended
@@ -96,13 +98,9 @@ nginx site and static web files.
 
 ### Create a profile
 
-Tell the assistant your name, age, height, weight, activity, and goal. You can supply
-several details in one message; it asks for anything still needed. Dietary
-preferences, habits, and instructions for the assistant are optional.
+Choose **Crear perfil manualmente** to save the profile details and goals you want without contacting OpenRouter. Calos stores the values as entered and does not calculate or recommend goals in this path.
 
-Review the suggested calories and macros, ask for changes if needed, then choose
-**Aplicar objetivos y empezar** to save the targets and create the profile. These
-are initial estimates that can be adjusted as you record your progress.
+Alternatively, tell the assistant your name, age, height, weight, activity, and goal. It asks for anything missing. Review its proposed calories and macros, ask for changes if needed, then choose **Aplicar objetivos y empezar**. Conversational targets are estimates, not clinical guidance.
 
 Use **Perfil activo** to switch people or **Nuevo perfil** to start another
 conversation. Switching profiles clears pending chat messages, drafts, and photos;
@@ -110,9 +108,9 @@ saved entries remain in their own profile.
 
 ### Record and correct meals
 
-Describe the food, the amount, and the meal. Calos accepts grams, milliliters, and
-liters. If a quantity is missing, the assistant asks before recording anything.
-You can then correct an entry by telling it which food or amount should change.
+Use **Registrar comida** to enter a food, amount, meal, date, nutrients, and an explicit source (nutrition label or user-provided data) directly. Or describe the food to the assistant; it asks for missing quantities before recording. The selected diary date is shown as the chat's exact destination date, and assistant writes produce an editable receipt.
+
+Use a row's actions to edit or repeat an entry on a chosen date. Save a meal group as a favorite/recipe to repeat its referenced foods, portions, sources, and nutrients without an assistant request. Repeats preserve original portions; portion scaling is not available yet.
 
 For a matched USDA food, the app calculates nutrients from the local reference:
 
@@ -120,9 +118,7 @@ For a matched USDA food, the app calculates nutrients from the local reference:
 serving nutrients = nutrients per 100 g × serving weight in grams / 100
 ```
 
-Each entry keeps its source and serving information. Calories are rounded to whole
-kcal and macros to one decimal place. A volume requiring a density conversion is
-marked as approximate; a label with values per 100 ml is used directly.
+Assistant-calculated entries keep their source and serving information. Calories are rounded to whole kcal and macros to one decimal place. Manual entries store the nutrient values for the entered amount with the selected source and evidence; Calos does not infer those values. A volume requiring density conversion is marked approximate; a label with values per 100 ml is used directly.
 
 ### Use photos and personal food references
 
@@ -153,6 +149,8 @@ proposal. Advice alone does not write meals, measurements, or targets; choose
 Open **Peso** or **Cintura** to add, update, or delete a dated measurement and view
 its history. Advice can use the selected day, recent meal records, and measurement
 history. Missing records are not treated as a complete picture of your intake.
+
+At the bottom of the diary, download a profile-scoped JSON backup or CSV of its meal entries. JSON import validates the snapshot and, after confirmation, replaces data only for the active profile. Deleted foods remain recoverable from that profile's persistent deleted-entry list.
 
 ## Development
 

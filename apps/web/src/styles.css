@@ -286,7 +286,7 @@ small {
 }
 .food-row {
   display: grid;
-  grid-template-columns: 1fr auto 28px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 14px;
   padding: 13px 0 13px 34px;
@@ -312,16 +312,28 @@ small {
   font-weight: 600;
   color: oklch(0.38 0.08 75);
 }
-.food-row button {
-  opacity: 0;
-  border: 0;
-  color: oklch(0.46 0.025 145);
-  background: none;
-  padding: 5px;
+.food-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
-.food-row:hover button,
-.food-row button:focus-visible {
-  opacity: 1;
+.food-row-actions button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 7px;
+  color: oklch(0.38 0.03 145);
+  background: transparent;
+}
+.food-row-actions button:hover {
+  background: oklch(0.92 0.025 145);
+  color: oklch(0.26 0.06 145);
+}
+.food-row-actions button:focus-visible {
+  outline: 2px solid oklch(0.4 0.11 140);
+  outline-offset: 1px;
 }
 .empty {
   display: flex;
@@ -488,6 +500,26 @@ textarea:focus {
   color: oklch(0.47 0.02 145);
   font-size: 10px;
   line-height: 1.4;
+}
+.chat-privacy-details {
+  margin-top: 8px;
+  color: oklch(0.4 0.025 145);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.chat-privacy-details summary {
+  width: fit-content;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.chat-privacy-details summary:focus-visible {
+  outline: 2px solid oklch(0.4 0.11 140);
+  outline-offset: 3px;
+}
+.chat-privacy-details p {
+  max-width: 72ch;
+  font-size: 12px;
 }
 .food-source {
   font-size: 12px;
@@ -762,7 +794,12 @@ textarea:focus {
     padding-inline: 10px;
   }
   .sidebar nav button > span:first-child {
-    font-size: 20px;
+    display: grid;
+    place-items: center;
+  }
+  .sidebar nav button svg {
+    width: 19px;
+    height: 19px;
   }
   .sidebar-footer {
     font-size: 0;
@@ -816,11 +853,20 @@ textarea:focus {
     display: inline;
   }
   .sidebar nav button > span:first-child {
+    display: grid;
+    place-items: center;
     font-size: 16px;
+  }
+  .sidebar nav button svg {
+    width: 19px;
+    height: 19px;
   }
   .workspace {
     display: flex;
     flex-direction: column;
+  }
+  .app-shell:not([data-view="asistente"]) .chat {
+    display: none;
   }
   .content {
     padding: 28px 20px;
@@ -1026,6 +1072,13 @@ textarea:focus {
   color: oklch(0.43 0.025 145);
   font-size: 11px;
 }
+.chat-context .chat-destination {
+  display: block;
+  color: oklch(0.29 0.06 145);
+  font-size: 12px;
+  font-weight: 650;
+  margin-top: 4px;
+}
 
 .photo-actions {
   display: flex;
@@ -1192,6 +1245,13 @@ textarea:focus {
   border-top: 1px solid oklch(0.83 0.02 145);
   padding-top: 20px;
 }
+.onboarding-privacy {
+  max-width: 72ch;
+  margin: 0 0 16px;
+  color: oklch(0.4 0.025 145);
+  font-size: 13px;
+  line-height: 1.5;
+}
 .onboarding-composer label {
   display: block;
   font-size: 14px;
@@ -1323,4 +1383,451 @@ textarea:focus {
   line-height: 1.5;
   color: oklch(0.4 0.025 145);
   margin: 0;
+}
+
+.diary-destination {
+  color: oklch(0.35 0.06 145);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 12px 0 0;
+}
+.remaining-over {
+  color: oklch(0.33 0.045 145);
+}
+.macro-excess {
+  color: oklch(0.37 0.035 145);
+  font-weight: 600;
+}
+.manual-food,
+.food-favorites,
+.food-trash,
+.data-portability {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid oklch(0.84 0.012 145);
+}
+.manual-food-heading,
+.manual-food-actions,
+.portability-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.manual-food-heading h2,
+.food-favorites h2 {
+  margin: 0;
+}
+.manual-food-form,
+.manual-profile-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+.manual-food-form label,
+.manual-profile-form label,
+.favorite-save label {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 650;
+}
+.manual-food-form input,
+.manual-food-form select,
+.manual-profile-form input,
+.manual-profile-form select,
+.manual-profile-form textarea,
+.favorite-save input {
+  min-width: 0;
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 10px;
+  border: 1px solid oklch(0.72 0.02 145);
+  border-radius: 8px;
+  background: white;
+  color: oklch(0.23 0.025 145);
+  font: inherit;
+  font-size: 16px;
+}
+.manual-food-form input:focus-visible,
+.manual-food-form select:focus-visible,
+.manual-profile-form input:focus-visible,
+.manual-profile-form select:focus-visible,
+.manual-profile-form textarea:focus-visible,
+.favorite-save input:focus-visible {
+  outline: 2px solid oklch(0.4 0.11 140);
+  outline-offset: 2px;
+}
+.manual-food-form fieldset,
+.manual-profile-form fieldset {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid oklch(0.84 0.012 145);
+  border-radius: 9px;
+}
+.manual-food-form legend,
+.manual-profile-form legend {
+  padding-inline: 5px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.manual-food-form fieldset > p,
+.manual-profile-form fieldset > p {
+  color: oklch(0.4 0.025 145);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 2px 0 12px;
+}
+.manual-food-grid,
+.manual-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.manual-food-nutrients {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.manual-food-actions {
+  justify-content: flex-end;
+}
+.favorite-save {
+  margin: 10px 0 0 34px;
+  font-size: 13px;
+}
+.favorite-save summary,
+.food-trash summary,
+.data-portability summary {
+  cursor: pointer;
+  color: oklch(0.34 0.055 145);
+  font-weight: 650;
+  min-height: 40px;
+  padding-block: 10px;
+}
+.favorite-save form {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  padding-block: 8px 12px;
+}
+.favorite-save form > label {
+  flex: 1;
+}
+.food-favorites ul,
+.food-trash ul {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+}
+.food-favorites li,
+.food-trash li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid oklch(0.87 0.012 145);
+}
+.food-favorites li > span,
+.food-trash li > span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.food-favorites li small,
+.food-trash li small {
+  color: oklch(0.43 0.025 145);
+}
+.food-trash li strong,
+.food-favorites li strong {
+  overflow-wrap: anywhere;
+}
+.data-portability > p,
+.food-trash > p {
+  max-width: 68ch;
+  color: oklch(0.42 0.025 145);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.portability-actions {
+  justify-content: flex-start;
+}
+.portability-upload {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.portability-upload input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.portability-upload:focus-within {
+  outline: 2px solid oklch(0.4 0.11 140);
+  outline-offset: 2px;
+}
+.chat-receipt {
+  flex-shrink: 0;
+  padding: 14px;
+  background: oklch(0.95 0.025 145);
+  border-radius: 10px;
+}
+.chat-receipt h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.chat-receipt-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-block: 8px;
+  border-top: 1px solid oklch(0.84 0.025 145);
+}
+.chat-receipt-entry > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  font-size: 12px;
+}
+.chat-receipt-entry span,
+.chat-receipt-entry small {
+  color: oklch(0.4 0.025 145);
+  overflow-wrap: anywhere;
+}
+.onboarding-mode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  background: oklch(0.95 0.02 145);
+  border-radius: 9px;
+}
+.onboarding-mode p {
+  margin: 0;
+  color: oklch(0.35 0.03 145);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.manual-onboarding > h1 {
+  font-size: 28px;
+}
+.manual-onboarding > .waist-help {
+  max-width: 62ch;
+}
+@media (max-width: 820px) {
+  .manual-food-nutrients {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .food-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    padding-inline-start: 0;
+  }
+  .food-row > div:first-child {
+    grid-column: 1 / -1;
+  }
+  .food-row-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+  .favorite-save {
+    margin-inline-start: 0;
+  }
+  .app-shell[data-view="asistente"] .chat-context {
+    padding-inline: 18px;
+  }
+}
+@media (max-width: 480px) {
+  .manual-food-grid,
+  .manual-profile-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .manual-food-nutrients {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .favorite-save form,
+  .food-favorites li,
+  .food-trash li,
+  .chat-receipt-entry {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .food-favorites li .quiet-button,
+  .food-trash li .quiet-button,
+  .chat-receipt .quiet-button {
+    justify-content: center;
+    width: 100%;
+  }
+  .onboarding-mode {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .recipe-repeat-form,
+  .retention-controls,
+  .backup-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .recipe-repeat-form > *,
+  .retention-controls > *,
+  .backup-actions > button {
+    width: 100%;
+  }
+  .backup-management li {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+.recipe-editor {
+  display: grid;
+  gap: 12px;
+  margin-block: 18px;
+  padding-block: 16px;
+  border-block: 1px solid oklch(0.84 0.012 145);
+}
+.recipe-editor > .waist-help {
+  margin: 0;
+}
+.recipe-editor-form,
+.recipe-components {
+  display: grid;
+  gap: 12px;
+}
+.recipe-component {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid oklch(0.82 0.018 145);
+  border-radius: 8px;
+}
+.recipe-component legend {
+  padding-inline: 5px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.recipe-component p {
+  margin: 0;
+  color: oklch(0.39 0.025 145);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.recipe-component label,
+.recipe-repeat-form label,
+.retention-controls label {
+  display: grid;
+  gap: 5px;
+  min-width: 120px;
+  font-size: 12px;
+  font-weight: 650;
+}
+.recipe-component input,
+.recipe-repeat-form input,
+.retention-controls select {
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid oklch(0.72 0.02 145);
+  border-radius: 7px;
+  background: white;
+  color: oklch(0.23 0.025 145);
+  font: inherit;
+  font-size: 16px;
+}
+.recipe-component input:focus-visible,
+.recipe-repeat-form input:focus-visible,
+.retention-controls select:focus-visible {
+  outline: 2px solid oklch(0.4 0.11 140);
+  outline-offset: 2px;
+}
+.recipe-actions,
+.trash-actions {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+.recipe-repeat-form,
+.retention-controls {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.recipe-repeat-form button {
+  align-self: end;
+}
+.backup-management,
+.retention-settings {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid oklch(0.86 0.012 145);
+}
+.backup-management h3,
+.retention-settings h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.backup-management > p,
+.retention-settings > p {
+  max-width: 68ch;
+  color: oklch(0.39 0.025 145);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.backup-management ul {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+.backup-management li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-block: 10px;
+  border-bottom: 1px solid oklch(0.87 0.012 145);
+}
+.backup-management li > span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.backup-management li small {
+  color: oklch(0.4 0.025 145);
+  overflow-wrap: anywhere;
+}
+.backup-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.retention-controls {
+  align-items: end;
+}
+.ai-quota-notice {
+  display: grid;
+  gap: 5px;
+  margin-block: 8px;
+  color: oklch(0.36 0.035 145);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.ai-quota-notice p,
+.ai-quota-notice small {
+  margin: 0;
+  color: inherit;
+  font-size: inherit;
+}
+.ai-quota-notice button {
+  justify-self: start;
+  min-height: 36px;
 }
