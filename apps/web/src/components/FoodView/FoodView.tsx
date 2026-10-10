@@ -4,6 +4,7 @@ import type { FoodEntry } from "@calos/core";
 import { FoodHistory } from "../FoodHistory/index.js";
 import { today, formatDate } from "../../shared/presentation.js";
 import { FireIcon, ForkKnifeIcon, PlusIcon, TrashIcon } from "../../shared/icons.js";
+import { useTranslation } from "react-i18next";
 function Macro({
   name,
   amount,
@@ -17,6 +18,7 @@ function Macro({
   unit: string;
   color: string;
 }) {
+  const { t } = useTranslation();
   const percent = Math.min(100, Math.round((amount / target) * 100));
   return (
     <div className="macro">
@@ -31,8 +33,7 @@ function Macro({
         <i style={{ width: `${percent}%`, background: color }} />
       </div>
       <span className="macro-target">
-        de {target}
-        {unit}
+        {t("food.macroTarget", { target, unit })}
       </span>
     </div>
   );
@@ -77,20 +78,22 @@ export function FoodView({
   refresh,
   remove,
 }: FoodViewProps) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage === "en" ? "en-US" : "es-ES";
   return (
     <section
       className="content"
       id="comida-panel"
       hidden={view !== "comida"}
-      aria-label="Comida"
+      aria-label={t("nav.food")}
     >
       <header>
         <div>
-          <p className="date">{formatDate(selectedDate)}</p>
+          <p className="date">{formatDate(selectedDate, locale)}</p>
           <h1>
             {selectedDate === today()
-              ? "Tu día, de un vistazo."
-              : "Tu diario de comidas."}
+              ? t("food.titleToday")
+              : t("food.titleHistory")}
           </h1>
         </div>
         <button
@@ -100,11 +103,11 @@ export function FoodView({
             document.getElementById("chat-input")?.focus();
           }}
         >
-          <PlusIcon weight="bold" /> Registrar comida
+          <PlusIcon weight="bold" /> {t("food.register")}
         </button>
       </header>
       <div className="diary-date-picker">
-        <label htmlFor="diary-date">Consultar fecha</label>
+        <label htmlFor="diary-date">{t("food.consultDate")}</label>
         <input
           id="diary-date"
           type="date"
@@ -122,12 +125,12 @@ export function FoodView({
           disabled={selectedDate === today()}
           onClick={() => setSelectedDate(today())}
         >
-          Hoy
+          {t("common.today")}
         </button>
       </div>
       {selectedDate !== today() && (
         <p className="waist-help">
-          El chat registra las nuevas comidas en el día de hoy.
+          {t("food.chatAddsToday")}
         </p>
       )}
       {diaryError && (
@@ -140,7 +143,7 @@ export function FoodView({
       )}
       {diaryLoading ? (
         <p className="waist-help" role="status">
-          Cargando diario…
+          {t("food.loading")}
         </p>
       ) : (
         !diaryError && (
@@ -149,16 +152,16 @@ export function FoodView({
               <section className="calorie-panel">
                 <div>
                   <p className="section-label">
-                    {selectedDate === today() ? "Energía de hoy" : "Energía del día"}
+                    {selectedDate === today() ? t("food.energyToday") : t("food.energyDay")}
                   </p>
                   <div className="calorie-copy">
-                    <strong>{summary.total.calories.toLocaleString("es-ES")}</strong>
-                    <span>kcal consumidas</span>
+                    <strong>{summary.total.calories.toLocaleString(locale)}</strong>
+                    <span>{t("food.consumed")}</span>
                   </div>
                   <p className="remaining">
                     <FireIcon weight="fill" />{" "}
-                    {selectedDate === today() ? "Te quedan " : "Hasta el objetivo: "}
-                    <b>{remaining.toLocaleString("es-ES")} kcal</b>
+                    {selectedDate === today() ? `${t("food.remaining")} ` : `${t("food.untilGoal")} `}
+                    <b>{remaining.toLocaleString(locale)} kcal</b>
                   </p>
                 </div>
                 <div
@@ -168,29 +171,29 @@ export function FoodView({
                   <div>
                     <b>{Math.round(ring)}%</b>
                     <span>
-                      de {summary.dailyGoal.calories.toLocaleString("es-ES")} kcal
+                      {t("food.of", { value: summary.dailyGoal.calories.toLocaleString(locale) })} kcal
                     </span>
                   </div>
                 </div>
               </section>
               <section className="macro-panel">
-                <p className="section-label">Macronutrientes</p>
+                <p className="section-label">{t("food.macros")}</p>
                 <Macro
-                  name="Proteína"
+                  name={t("food.protein")}
                   amount={summary.total.protein}
                   target={summary.dailyGoal.protein}
                   unit=" g"
                   color="oklch(0.48 0.13 140)"
                 />
                 <Macro
-                  name="Carbohidratos"
+                  name={t("food.carbs")}
                   amount={summary.total.carbs}
                   target={summary.dailyGoal.carbs}
                   unit=" g"
                   color="oklch(0.63 0.15 80)"
                 />
                 <Macro
-                  name="Grasas"
+                  name={t("food.fat")}
                   amount={summary.total.fat}
                   target={summary.dailyGoal.fat}
                   unit=" g"
@@ -201,20 +204,17 @@ export function FoodView({
             <section className="diary">
               <div className="diary-title">
                 <div>
-                  <p className="section-label">Diario</p>
-                  <h2>Lo que has comido</h2>
+                  <p className="section-label">{t("food.diary")}</p>
+                  <h2>{t("food.whatAte")}</h2>
                 </div>
-                <span>
-                  {summary.entries.length}{" "}
-                  {summary.entries.length === 1 ? "registro" : "registros"}
-                </span>
+                <span>{t("food.entryCount", { count: summary.entries.length })}</span>
               </div>
               {groups.length ? (
                 groups.map((group) => (
                   <div className="meal-group" key={group.meal}>
                     <h3>
                       <i>{mealIcon(group.meal)}</i>
-                      {group.meal}
+                      {group.meal === "Desayuno" ? t("food.mealBreakfast") : group.meal === "Comida" ? t("food.mealLunch") : group.meal === "Cena" ? t("food.mealDinner") : group.meal}
                     </h3>
                     {group.entries.map((entry) => (
                       <article className="food-row" key={entry.id}>
@@ -226,48 +226,42 @@ export function FoodView({
                           </span>
                           {entry.source?.volumeEstimate && (
                             <p className="food-estimate-note">
-                              Valores aproximados · conversión de ml a gramos (
-                              {entry.source.volumeEstimate.gramsPerMilliliter} g/ml).{" "}
+                              {t("food.estimatedValues")} · {t("food.volumeConversion", { value: entry.source.volumeEstimate.gramsPerMilliliter })}{" "}
                               {entry.source.volumeEstimate.assumption}
                             </p>
                           )}
                           {entry.source?.photoEstimate && (
                             <p className="food-estimate-note">
-                              Foto de plato · composición
-                              {entry.source.photoEstimate.estimatedGrams
-                                ? " y cantidades"
-                                : ""}{" "}
-                              aproximada
-                              {entry.source.photoEstimate.estimatedGrams ? "s" : ""}
+                              {t("food.platePhoto")} · {t("food.composition")}{entry.source.photoEstimate.estimatedGrams ? ` ${t("food.andAmounts")}` : ""}
                             </p>
                           )}
                           {entry.source?.provider === "Estimación" && (
                             <p className="food-estimate-note">
-                              Valores aproximados · estimación del asistente
+                              {t("food.estimatedValues")} · {t("food.assistantEstimate")}
                             </p>
                           )}
                           {entry.source && (
                             <details className="food-source">
                               <summary>
                                 {entry.source.provider === "USDA FoodData Central"
-                                  ? "Referencia USDA"
+                                  ? t("food.usdaReference")
                                   : entry.source.provider === "Datos del usuario"
-                                    ? "Datos del usuario"
+                                    ? t("food.userData")
                                     : entry.source.provider === "Estimación"
-                                      ? "Estimación aproximada"
-                                      : "Etiqueta de la foto"}
+                                      ? t("food.estimated")
+                                      : t("food.photoLabel")}
                               </summary>
                               {entry.source.provider === "USDA FoodData Central" ? (
                                 <>
                                   <p>{entry.source.description}</p>
                                   <p>
                                     SR Legacy · FDC {entry.source.fdcId} ·{" "}
-                                    {entry.source.grams.toLocaleString("es-ES", {
+                                    {entry.source.grams.toLocaleString(locale, {
                                       maximumFractionDigits: 1,
                                     })}{" "}
                                     g
                                     {entry.source.portion
-                                      ? ` · Ración: ${entry.source.portion}`
+                                      ? ` · ${t("food.portion", { value: entry.source.portion })}`
                                       : ""}
                                   </p>
                                 </>
@@ -277,8 +271,7 @@ export function FoodView({
                                   {entry.source.provider === "Estimación" && (
                                     <>
                                       <p>
-                                        No hay una receta o referencia exacta.
-                                        Suposiciones usadas:
+                                        {t("food.estimatedNoRecipe")} {t("food.assumptions")}
                                       </p>
                                       <ul>
                                         {entry.source.assumptions.map(
@@ -294,20 +287,17 @@ export function FoodView({
                                       (range) => range.min !== range.max,
                                     ) && (
                                       <p>
-                                        Estimación con el punto medio de los rangos
-                                        indicados.
+                                        {t("food.rangeMidpoint")}
                                       </p>
                                     )}
                                   <p>
-                                    Valores por{" "}
-                                    {entry.source.basis === "serving"
-                                      ? "ración"
+                                    {t("food.perBasis", { basis: entry.source.basis === "serving"
+                                      ? t("food.serving")
                                       : entry.source.basis === "100ml"
-                                        ? "100 ml"
-                                        : "100 g"}
-                                    :{" "}
+                                        ? t("food.oneHundredMl")
+                                        : t("food.oneHundredG") })}{" "}
                                     {entry.source.perBasis.calories.toLocaleString(
-                                      "es-ES",
+                                      locale,
                                       { maximumFractionDigits: 1 },
                                     )}{" "}
                                     kcal · P {entry.source.perBasis.protein} g · C{" "}
@@ -319,10 +309,9 @@ export function FoodView({
                               {entry.source.photoEstimate && (
                                 <div className="photo-source-details">
                                   <p>
-                                    Identificación visual.{" "}
-                                    {entry.source.photoEstimate.estimatedGrams
-                                      ? "El peso se ha estimado a partir de la foto."
-                                      : "El peso se ha indicado en la conversación."}
+                                    {t("food.visualIdentification")} {entry.source.photoEstimate.estimatedGrams
+                                      ? t("measurements.weightEstimated")
+                                      : t("measurements.weightGiven")}
                                   </p>
                                   <ul>
                                     {entry.source.photoEstimate.assumptions.map(
@@ -340,7 +329,7 @@ export function FoodView({
                           {entry.calories} <small>kcal</small>
                         </b>
                         <button
-                          aria-label={`Eliminar ${entry.name}`}
+                          aria-label={t("food.delete", { name: entry.name })}
                           onClick={() => void remove(entry.id)}
                         >
                           <TrashIcon />
@@ -357,13 +346,13 @@ export function FoodView({
                   <div>
                     <h3>
                       {selectedDate === today()
-                        ? "Tu diario está preparado"
-                        : "No hay comidas en esta fecha"}
+                        ? t("food.ready")
+                        : t("food.noMeals")}
                     </h3>
                     <p>
                       {selectedDate === today()
-                        ? "Escribe en el chat qué has comido para registrar tu primera comida."
-                        : "Elige otro día en el historial para consultar sus registros."}
+                        ? t("food.firstMeal")
+                        : t("food.chooseDay")}
                     </p>
                   </div>
                 </div>

@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import type { NutritionPlan } from "@calos/core";
 import { useNutritionPlan, useSaveNutritionPlan } from "../../queries/plan.queries.js";
 
 export function NutritionObjectives() {
+  const { t } = useTranslation();
   const query = useNutritionPlan();
   const save = useSaveNutritionPlan();
   const [editing, setEditing] = useState<NutritionPlan | null>(null);
@@ -45,16 +47,16 @@ export function NutritionObjectives() {
   if (query.isPending) {
     return (
       <p className="coach-objectives" role="status">
-        Cargando tus objetivos…
+        {t("objectives.loading")}
       </p>
     );
   }
   if (query.isError) {
     return (
       <div className="coach-objectives">
-        <p role="alert">No se han podido cargar tus objetivos.</p>
+        <p role="alert">{t("objectives.loadError")}</p>
         <button className="quiet-button" onClick={() => void query.refetch()}>
-          Reintentar
+          {t("common.retry")}
         </button>
       </div>
     );
@@ -62,22 +64,22 @@ export function NutritionObjectives() {
 
   const plan = query.data;
   return (
-    <section className="coach-objectives" aria-label="Tus objetivos nutricionales">
+    <section className="coach-objectives" aria-label={t("objectives.title")}>
       <div className="coach-objectives-header">
         <div>
-          <h2>Tus objetivos</h2>
+          <h2>{t("objectives.title")}</h2>
           <p>{plan.goal}</p>
         </div>
         {!editing && (
           <button className="quiet-button" onClick={start}>
-            Editar objetivos
+            {t("objectives.edit")}
           </button>
         )}
       </div>
       {editing ? (
         <form onSubmit={submit} className="onboarding-fields coach-goal-form">
           <label className="onboarding-wide">
-            Objetivo
+            {t("objectives.goal")}
             <input
               value={editing.goal}
               maxLength={500}
@@ -88,10 +90,10 @@ export function NutritionObjectives() {
           </label>
           {(
             [
-              ["calories", "Calorías diarias (kcal)", 300, 10000],
-              ["protein", "Proteína diaria (g)", 0, 1000],
-              ["carbs", "Carbohidratos diarios (g)", 0, 2000],
-              ["fat", "Grasas diarias (g)", 0, 1000],
+              ["calories", t("objectives.calories"), 300, 10000],
+              ["protein", t("objectives.protein"), 0, 1000],
+              ["carbs", t("objectives.carbs"), 0, 2000],
+              ["fat", t("objectives.fat"), 0, 1000],
             ] as const
           ).map(([key, label, min, max]) => (
             <label key={key}>
@@ -114,7 +116,7 @@ export function NutritionObjectives() {
             </label>
           ))}
           <label>
-            Peso objetivo (kg, opcional)
+            {t("objectives.targetWeight")}
             <input
               type="number"
               min="10"
@@ -131,7 +133,7 @@ export function NutritionObjectives() {
             />
           </label>
           <label>
-            Fecha orientativa (opcional)
+            {t("objectives.targetDate")}
             <input
               type="date"
               value={editing.targetDate ?? ""}
@@ -142,7 +144,7 @@ export function NutritionObjectives() {
             />
           </label>
           <label className="onboarding-wide">
-            Hábitos (uno por línea)
+            {t("objectives.habits")}
             <textarea
               rows={3}
               maxLength={2400}
@@ -152,7 +154,7 @@ export function NutritionObjectives() {
             />
           </label>
           <label className="onboarding-wide">
-            Notas para el seguimiento
+            {t("objectives.notes")}
             <textarea
               rows={2}
               maxLength={2000}
@@ -168,19 +170,18 @@ export function NutritionObjectives() {
               disabled={save.isPending}
               onClick={() => setEditing(null)}
             >
-              Cancelar
+              {t("common.cancel")}
             </button>
             <button
               className="quiet-button onboarding-primary"
               disabled={save.isPending}
             >
-              {save.isPending ? "Guardando…" : "Guardar objetivos"}
+              {save.isPending ? t("objectives.saving") : t("objectives.save")}
             </button>
           </div>
           {save.isError && (
             <p className="onboarding-wide photo-error" role="alert">
-              No se han podido guardar los objetivos. Si han cambiado, cancela y vuelve
-              a editarlos.
+              {t("objectives.saveError")}
             </p>
           )}
         </form>
@@ -204,7 +205,7 @@ export function NutritionObjectives() {
             </ul>
           )}
           {plan.notes && <p>{plan.notes}</p>}
-          {saved && <p role="status">Objetivos guardados.</p>}
+          {saved && <p role="status">{t("objectives.saved")}</p>}
         </>
       )}
     </section>

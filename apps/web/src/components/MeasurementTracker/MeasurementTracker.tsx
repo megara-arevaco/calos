@@ -1,15 +1,19 @@
 import { MeasurementChart } from "../MeasurementChart/index.js";
 import { useMeasurementTracker } from "./MeasurementTracker.hook.js";
-const number = new Intl.NumberFormat("es-ES", { maximumFractionDigits: 1 });
+import { useTranslation } from "react-i18next";
+const numberLabel = (value: number, locale: string) =>
+  new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(value);
 
-const dateLabel = (date: string) =>
-  new Intl.DateTimeFormat("es-ES", {
+const dateLabel = (date: string, locale: string) =>
+  new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "short",
     year: "numeric",
   }).format(new Date(`${date}T12:00:00`));
 
 export function MeasurementTracker({ kind }: { kind: "waist" | "weight" }) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage === "en" ? "en-US" : "es-ES";
   const {
     isWeight,
     title,
@@ -43,15 +47,13 @@ export function MeasurementTracker({ kind }: { kind: "waist" | "weight" }) {
         <div>
           <h2 id={`${prefix}-title`}>{title}</h2>
           <p className="waist-help">
-            {isWeight
-              ? "Registra tu peso en kilos para seguir su evolución."
-              : "Registra el contorno de tu cintura en centímetros."}
+            {isWeight ? t("measurements.weightIntro") : t("measurements.waistIntro")}
           </p>
         </div>
       </div>
       <form className="waist-form" onSubmit={save}>
         <div>
-          <label htmlFor={`${prefix}-date`}>Fecha</label>
+          <label htmlFor={`${prefix}-date`}>{t("common.date")}</label>
           <input
             id={`${prefix}-date`}
             type="date"
@@ -66,13 +68,13 @@ export function MeasurementTracker({ kind }: { kind: "waist" | "weight" }) {
         </div>
         <div>
           <label htmlFor={`${prefix}-value`}>
-            {isWeight ? "Peso (kg)" : "Contorno (cm)"}
+            {isWeight ? t("measurements.weight") : t("measurements.waist")}
           </label>
           <input
             id={`${prefix}-value`}
             type="text"
             inputMode="decimal"
-            placeholder={isWeight ? "Ej. 99,0" : "Ej. 82,5"}
+            placeholder={isWeight ? t("measurements.exampleWeight") : t("measurements.exampleWaist")}
             value={value}
             onChange={(event) => {
               setValue(event.target.value);
@@ -88,14 +90,13 @@ export function MeasurementTracker({ kind }: { kind: "waist" | "weight" }) {
           type="submit"
           disabled={busy || loading || !value.trim() || !date}
         >
-          {busy ? "Guardando…" : updating ? "Actualizar medida" : "Guardar medida"}
+          {busy ? t("objectives.saving") : updating ? t("measurements.update") : t("measurements.save")}
         </button>
       </form>
       <p id={`${prefix}-hint`} className="waist-help">
-        Una medida por fecha.{" "}
-        {isWeight
-          ? "Pésate en condiciones similares para comparar."
-          : "Mídete siempre de la misma forma para comparar."}
+        {t("measurements.onePerDate")} {isWeight
+          ? t("measurements.weightAdvice")
+          : t("measurements.waistAdvice")}
       </p>
       {error && (
         <p className="waist-error" role="alert">
@@ -106,7 +107,7 @@ export function MeasurementTracker({ kind }: { kind: "waist" | "weight" }) {
             disabled={busy || loading}
             onClick={() => void load()}
           >
-            Recargar historial
+            {t("measurements.reload")}
           </button>
         </p>
       )}
@@ -116,38 +117,38 @@ export function MeasurementTracker({ kind }: { kind: "waist" | "weight" }) {
       {!loading && !error && (
         <MeasurementChart
           measurements={history}
-          title={isWeight ? "Evolución del peso" : "Evolución de la cintura"}
+          title={isWeight ? t("measurements.weightTitle") : t("measurements.waistTitle")}
           unit={unit}
           id={`${prefix}-chart-title`}
         />
       )}
       {loading ? (
-        <p className="waist-help">Cargando medidas…</p>
+        <p className="waist-help">{t("measurements.loading")}</p>
       ) : latest ? (
         <>
           <p className="waist-summary">
-            Última medida:{" "}
+            {t("measurements.latest")}{" "}
             <strong>
-              {number.format(latest.value)} {unit}
+              {numberLabel(latest.value, locale)} {unit}
             </strong>{" "}
-            <span>· {dateLabel(latest.date)}</span>
+            <span>· {dateLabel(latest.date, locale)}</span>
             {history.length > 1 && (
               <span className="waist-change">
                 {change > 0 ? "+" : ""}
-                {number.format(change)} {unit} desde el {dateLabel(first!.date)}
+                {numberLabel(change, locale)} {unit} {t("measurements.since", { date: dateLabel(first!.date, locale) })}
               </span>
             )}
           </p>
           <details className="waist-history" open>
             <summary>
-              Historial · {history.length} {history.length === 1 ? "medida" : "medidas"}
+              {t("measurements.history", { count: history.length })}
             </summary>
             <ul>
               {history.map((item) => (
                 <li key={item.id}>
-                  <time dateTime={item.date}>{dateLabel(item.date)}</time>
+                  <time dateTime={item.date}>{dateLabel(item.date, locale)}</time>
                   <strong>
-                    {number.format(item.value)} <small>{unit}</small>
+                    {numberLabel(item.value, locale)} <small>{unit}</small>
                   </strong>
                   <button
                     type="button"
@@ -159,16 +160,16 @@ export function MeasurementTracker({ kind }: { kind: "waist" | "weight" }) {
                       setNotice("");
                       document.getElementById(`${prefix}-value`)?.focus();
                     }}
-                    aria-label={`Editar medida del ${dateLabel(item.date)}`}
+                    aria-label={t("measurements.editDate", { date: dateLabel(item.date, locale) })}
                   >
-                    Editar
+                    {t("measurements.edit")}
                   </button>
                   <button
                     type="button"
                     className="waist-delete"
                     disabled={busy}
                     onClick={() => void remove(item.id)}
-                    aria-label={`Eliminar medida del ${dateLabel(item.date)}`}
+                    aria-label={t("measurements.deleteDate", { date: dateLabel(item.date, locale) })}
                   >
                     ×
                   </button>
@@ -180,7 +181,7 @@ export function MeasurementTracker({ kind }: { kind: "waist" | "weight" }) {
       ) : (
         !error && (
           <p className="waist-help">
-            Guarda tu primera medida para empezar a ver la evolución.
+            {t("measurements.first")}
           </p>
         )
       )}

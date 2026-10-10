@@ -1,7 +1,8 @@
 import type { FoodHistoryDay } from "@calos/core";
+import { useTranslation } from "react-i18next";
 
-const dateLabel = (date: string) =>
-  new Intl.DateTimeFormat("es-ES", {
+const dateLabel = (date: string, locale: string) =>
+  new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -16,11 +17,13 @@ export function FoodHistory({
   selectedDate: string;
   onSelect: (date: string) => void;
 }) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage === "en" ? "en-US" : "es-ES";
   return (
     <section className="food-history" aria-labelledby="food-history-title">
-      <h2 id="food-history-title">Historial de comidas</h2>
+      <h2 id="food-history-title">{t("food.history")}</h2>
       <p className="waist-help">
-        Selecciona un día para consultar sus comidas y macronutrientes.
+        {t("food.historyHelp")}
       </p>
       {days.length ? (
         <ul>
@@ -33,13 +36,13 @@ export function FoodHistory({
                 onClick={() => onSelect(day.date)}
               >
                 <span>
-                  <time dateTime={day.date}>{dateLabel(day.date)}</time>
+                  <time dateTime={day.date}>{dateLabel(day.date, locale)}</time>
                   <small>
-                    {day.entryCount} {day.entryCount === 1 ? "registro" : "registros"}
+                    {t("food.entryCount", { count: day.entryCount })}
                   </small>
                 </span>
                 <strong>
-                  {day.total.calories.toLocaleString("es-ES")} <small>kcal</small>
+                  {day.total.calories.toLocaleString(locale)} <small>kcal</small>
                 </strong>
                 <span aria-hidden="true">→</span>
               </button>
@@ -47,7 +50,7 @@ export function FoodHistory({
           ))}
         </ul>
       ) : (
-        <p className="waist-help">Los días aparecerán aquí cuando registres comidas.</p>
+        <p className="waist-help">{t("food.historyEmpty")}</p>
       )}
     </section>
   );

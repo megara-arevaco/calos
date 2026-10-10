@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { OnboardingMessage, UserProfileInput } from "@calos/core";
+import { useTranslation } from "react-i18next";
+import { LanguageSelector } from "../LanguageSelector.js";
 
 type Turn = OnboardingMessage & { profile?: UserProfileInput };
-
-const greeting =
-  "Vamos a preparar un objetivo de calorías y macros para ti. ¿Cómo te llamas y qué te gustaría conseguir? Puedes contarme también tu edad, altura, peso y cómo es tu actividad habitual.";
 
 export function ProfileOnboarding({
   onSave,
@@ -17,6 +16,8 @@ export function ProfileOnboarding({
   busy: boolean;
   error: boolean;
 }) {
+  const { t } = useTranslation();
+  const greeting = t("onboarding.greeting");
   const [messages, setMessages] = useState<Turn[]>([
     { role: "assistant", text: greeting },
   ]);
@@ -28,6 +29,13 @@ export function ProfileOnboarding({
   const conversation = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const sending = useRef(false);
+  useEffect(() => {
+    setMessages((current) =>
+      current.length === 1 && current[0]?.role === "assistant"
+        ? [{ role: "assistant", text: greeting }]
+        : current,
+    );
+  }, [greeting]);
   useEffect(() => {
     const log = conversation.current;
 
@@ -93,7 +101,7 @@ export function ProfileOnboarding({
       }
     } catch {
       setFailure(
-        "No se ha podido conectar con Calos. Tu mensaje sigue aquí; vuelve a enviarlo.",
+        t("onboarding.networkError"),
       );
     } finally {
       sending.current = false;
@@ -117,10 +125,11 @@ export function ProfileOnboarding({
   };
   return (
     <main className="onboarding-shell">
-      <section className="onboarding" aria-label="Crear tu perfil">
+      <section className="onboarding" aria-label={t("onboarding.title")}>
         <div className="onboarding-brand">
           <img src="./branding/calos-icon.svg" alt="" width="44" height="44" />
           <span>calos</span>
+          <LanguageSelector />
           {onCancel && (
             <button
               type="button"
@@ -128,7 +137,7 @@ export function ProfileOnboarding({
               onClick={onCancel}
               disabled={waiting || busy}
             >
-              Cancelar
+              {t("common.cancel")}
             </button>
           )}
         </div>
@@ -136,7 +145,7 @@ export function ProfileOnboarding({
           ref={conversation}
           className="onboarding-conversation"
           role="log"
-          aria-label="Conversación para crear tu perfil"
+          aria-label={t("onboarding.conversation")}
           aria-live="polite"
           aria-relevant="additions text"
           aria-busy={waiting}
@@ -147,37 +156,37 @@ export function ProfileOnboarding({
               className={`onboarding-message onboarding-message-${message.role}`}
             >
               <span className="onboarding-speaker">
-                {message.role === "assistant" ? "Calos" : "Tú"}
+                {message.role === "assistant" ? t("onboarding.calos") : t("onboarding.you")}
               </span>
               <p>{message.text}</p>
             </div>
           ))}
           {pendingText && (
             <div className="onboarding-message onboarding-message-user">
-              <span className="onboarding-speaker">Tú</span>
+              <span className="onboarding-speaker">{t("onboarding.you")}</span>
               <p>{pendingText}</p>
             </div>
           )}
           {waiting && (
             <p className="onboarding-thinking" role="status">
-              Calos está preparando su respuesta…
+              {t("onboarding.thinking")}
             </p>
           )}
         </div>
         {proposal && (
           <section className="onboarding-proposal" aria-labelledby="proposal-title">
-            <h2 id="proposal-title">Tu punto de partida</h2>
+            <h2 id="proposal-title">{t("onboarding.startingPoint")}</h2>
             <p>
-              {proposal.name} · {proposal.age} años · {proposal.heightCm} cm ·{" "}
+              {proposal.name} · {proposal.age} {t("onboarding.years")} · {proposal.heightCm} cm ·{" "}
               {proposal.weightKg} kg
             </p>
             <p>{proposal.goal}</p>
             <dl className="onboarding-targets">
               {[
-                ["Calorías", proposal.dailyCalories, "kcal"],
-                ["Proteína", proposal.dailyProtein, "g"],
-                ["Carbohidratos", proposal.dailyCarbs, "g"],
-                ["Grasas", proposal.dailyFat, "g"],
+                [t("onboarding.calories"), proposal.dailyCalories, "kcal"],
+                [t("onboarding.protein"), proposal.dailyProtein, "g"],
+                [t("onboarding.carbs"), proposal.dailyCarbs, "g"],
+                [t("onboarding.fat"), proposal.dailyFat, "g"],
               ].map(([label, value, unit]) => (
                 <div key={label}>
                   <dt>{label}</dt>
@@ -188,8 +197,7 @@ export function ProfileOnboarding({
               ))}
             </dl>
             <p className="onboarding-hint">
-              Se guardarán en tu perfil como objetivos diarios. Si quieres cambiar algo,
-              dímelo abajo.
+              {t("onboarding.saveHint")}
             </p>
             <button
               type="button"
@@ -197,30 +205,29 @@ export function ProfileOnboarding({
               disabled={waiting || busy || Boolean(text.trim())}
               onClick={save}
             >
-              {busy ? "Creando perfil…" : "Aplicar objetivos y empezar"}
+              {busy ? t("onboarding.creating") : t("onboarding.applyStart")}
             </button>
           </section>
         )}
         {(failure || error) && (
           <p className="waist-error" role="alert">
-            {failure ||
-              "No se ha podido guardar el perfil. Tu propuesta sigue aquí; vuelve a aplicar los objetivos."}
+            {failure || t("onboarding.saveError")}
           </p>
         )}
         {messages.length < 40 ? (
           <form className="onboarding-composer" onSubmit={submit}>
             {proposal && (
-              <label htmlFor="onboarding-message">¿Quieres ajustar algo?</label>
+              <label htmlFor="onboarding-message">{t("onboarding.adjust")}</label>
             )}
             <textarea
               ref={input}
               id="onboarding-message"
-              aria-label={proposal ? undefined : "Tu mensaje"}
+              aria-label={proposal ? undefined : t("onboarding.yourMessage")}
               value={text}
               onChange={(event) => setText(event.target.value)}
               maxLength={2000}
               rows={3}
-              placeholder="Escribe como hablarías con Calos…"
+              placeholder={t("onboarding.placeholder")}
               autoFocus
               disabled={waiting || busy}
               onKeyDown={(event) => {
@@ -235,19 +242,19 @@ export function ProfileOnboarding({
               }}
             />
             <div className="onboarding-actions">
-              <span>Enter para enviar · Mayús + Enter para otra línea</span>
+              <span>{t("onboarding.enterHint")}</span>
               <button
                 type="submit"
                 className="quiet-button onboarding-primary"
                 disabled={!text.trim() || waiting || busy}
               >
-                {waiting ? "Preparando…" : "Enviar"}
+                {waiting ? t("onboarding.preparing") : t("assistant.send")}
               </button>
             </div>
           </form>
         ) : (
           <div className="onboarding-actions">
-            <p>Esta conversación ha llegado a su límite.</p>
+            <p>{t("onboarding.limit")}</p>
             <button
               type="button"
               className="quiet-button"
@@ -258,7 +265,7 @@ export function ProfileOnboarding({
                 setText("");
               }}
             >
-              Volver a empezar
+              {t("onboarding.restart")}
             </button>
           </div>
         )}

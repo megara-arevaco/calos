@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { DaySummary, FoodEntry } from "@calos/core";
 import {
   useDayQuery,
@@ -16,6 +17,7 @@ const initialSummary: DaySummary = {
 export type AppView = "comida" | "cintura" | "peso" | "asistente";
 
 export function useApp() {
+  const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState(today);
   const [view, setView] = useState<AppView>("comida");
   const day = useDayQuery(selectedDate);
@@ -55,9 +57,9 @@ export function useApp() {
     ring: Math.min(100, (summary.total.calories / summary.dailyGoal.calories) * 100),
     diaryLoading: day.isPending || history.isPending,
     diaryError: deleteFood.isError
-      ? "No se ha podido eliminar la comida. Prueba de nuevo."
+      ? t("food.deleteError")
       : day.isError || history.isError
-        ? "No se ha podido cargar el diario. Prueba de nuevo."
+        ? t("food.loadError")
         : "",
     refresh,
     remove,

@@ -1,5 +1,7 @@
 import type { LocalProfile } from "@calos/core";
 import type { AppView } from "../App/App.hook.js";
+import { useTranslation } from "react-i18next";
+import { LanguageSelector } from "../LanguageSelector.js";
 export function Sidebar({
   view,
   setView,
@@ -17,6 +19,7 @@ export function Sidebar({
   view: AppView;
   setView: (view: AppView) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -30,13 +33,13 @@ export function Sidebar({
         />
         <span>calos</span>
       </div>
-      <nav aria-label="Secciones">
+      <nav aria-label={t("nav.sections")}>
         {(
           [
-            { id: "comida", label: "Comida", icon: "⌘", panel: "comida-panel" },
-            { id: "cintura", label: "Cintura", icon: "↔", panel: "cintura-panel" },
-            { id: "peso", label: "Peso", icon: "⚖", panel: "peso-panel" },
-            { id: "asistente", label: "Asistente", icon: "◌", panel: "chat" },
+            { id: "comida", key: "food", icon: "⌘", panel: "comida-panel" },
+            { id: "cintura", key: "waist", icon: "↔", panel: "cintura-panel" },
+            { id: "peso", key: "weight", icon: "⚖", panel: "peso-panel" },
+            { id: "asistente", key: "assistant", icon: "◌", panel: "chat" },
           ] as const
         ).map((tab) => (
           <button
@@ -45,17 +48,17 @@ export function Sidebar({
             className={view === tab.id ? "active" : ""}
             aria-current={view === tab.id ? "page" : undefined}
             aria-controls={tab.panel}
-            aria-label={tab.label}
-            title={tab.label}
+            aria-label={t(`nav.${tab.key}`)}
+            title={t(`nav.${tab.key}`)}
             onClick={() => setView(tab.id)}
           >
             <span aria-hidden="true">{tab.icon}</span>
-            <span className="nav-label">{tab.label}</span>
+            <span className="nav-label">{t(`nav.${tab.key}`)}</span>
           </button>
         ))}
       </nav>
       <div className="profile-switcher">
-        <label htmlFor="active-profile">Perfil activo</label>
+        <label htmlFor="active-profile">{t("nav.activeProfile")}</label>
         <select
           id="active-profile"
           value={activeId}
@@ -69,11 +72,12 @@ export function Sidebar({
           ))}
         </select>
         <button type="button" onClick={onCreate} disabled={busy}>
-          Nuevo perfil
+          {t("nav.newProfile")}
         </button>
       </div>
       <div className="sidebar-footer">
-        <span className="status-dot" /> Datos en el servidor
+        <LanguageSelector />
+        <span className="status-dot" /> {t("nav.serverData")}
       </div>
     </aside>
   );

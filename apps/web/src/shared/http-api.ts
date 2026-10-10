@@ -1,6 +1,7 @@
 import type { CalosApi } from "@calos/core";
 import type { RpcChannel, RpcInput } from "@calos/core";
 import type { ProfileRegistry } from "@calos/core";
+import i18n from "../i18n.js";
 
 async function invoke<T>(channel: RpcChannel, args: unknown[]): Promise<T> {
   const response = await fetch(`/api/rpc/${channel}`, {
@@ -11,7 +12,7 @@ async function invoke<T>(channel: RpcChannel, args: unknown[]): Promise<T> {
   const result = await response.json();
 
   if (!response.ok || !result.ok) {
-    throw new Error(result.error || "No se ha podido conectar con Calos");
+    throw new Error(result.error || i18n.t("common.connectionError"));
   }
   return result.data as T;
 }

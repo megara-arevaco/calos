@@ -1055,6 +1055,39 @@ textarea:focus {
 .sidebar-footer {
   margin-top: 0;
 }
+.language-selector {
+  display: grid;
+  gap: 4px;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: normal;
+}
+.language-selector select {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid oklch(0.42 0.025 145);
+  border-radius: 7px;
+  background: oklch(0.25 0.03 145);
+  color: oklch(0.94 0.015 145);
+  padding: 6px 8px;
+  font: inherit;
+}
+.sidebar-footer .language-selector {
+  margin-bottom: 14px;
+}
+.onboarding-brand .language-selector {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+}
+.onboarding-brand .language-selector select {
+  width: auto;
+  min-width: 114px;
+  background: white;
+  color: oklch(0.25 0.03 145);
+  border-color: oklch(0.82 0.02 145);
+}
 .profile-error {
   position: fixed;
   inset: auto 24px 24px auto;

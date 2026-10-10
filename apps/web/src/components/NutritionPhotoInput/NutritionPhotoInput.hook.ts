@@ -1,9 +1,11 @@
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { NutritionImage } from "@calos/core";
 import type { PhotoAttachment } from "./NutritionPhotoInput.js";
 export function useNutritionPhotoInput(
   onChange: (photo: PhotoAttachment | null) => void,
 ) {
+  const { t } = useTranslation();
   const input = useRef<HTMLInputElement>(null);
   const plateInput = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
@@ -17,7 +19,7 @@ export function useNutritionPhotoInput(
       !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
       file.size > 6 * 1024 * 1024
     ) {
-      setError("Elige una foto JPG, PNG o WebP de hasta 6 MB.");
+      setError(t("photo.invalid"));
       return;
     }
     setReading(true);
@@ -37,7 +39,7 @@ export function useNutritionPhotoInput(
         },
       });
     } catch {
-      setError("No se ha podido abrir la foto. Prueba de nuevo.");
+      setError(t("photo.openError"));
     } finally {
       setReading(false);
     }

@@ -1,5 +1,6 @@
 import { useNutritionPhotoInput } from "./NutritionPhotoInput.hook.js";
 import type { NutritionImage, PlateDraft } from "@calos/core";
+import { useTranslation } from "react-i18next";
 
 export interface PhotoAttachment {
   image: NutritionImage;
@@ -16,6 +17,7 @@ export function NutritionPhotoInput({
   onChange: (photo: PhotoAttachment | null) => void;
   disabled: boolean;
 }) {
+  const { t } = useTranslation();
   const { input, plateInput, error, setError, reading, attach } =
     useNutritionPhotoInput(onChange);
   return (
@@ -24,7 +26,7 @@ export function NutritionPhotoInput({
         ref={input}
         type="file"
         accept="image/jpeg,image/png,image/webp"
-        aria-label="Foto de etiqueta nutricional"
+        aria-label={t("photo.labelPhoto")}
         hidden
         disabled={disabled || reading}
         onChange={(event) => {
@@ -36,7 +38,7 @@ export function NutritionPhotoInput({
         ref={plateInput}
         type="file"
         accept="image/jpeg,image/png,image/webp"
-        aria-label="Foto de plato"
+        aria-label={t("photo.platePhoto")}
         hidden
         disabled={disabled || reading}
         onChange={(event) => {
@@ -50,23 +52,23 @@ export function NutritionPhotoInput({
             src={`data:${photo.image.mimeType};base64,${photo.image.base64}`}
             alt={
               photo.image.kind === "plate"
-                ? "Plato adjunto"
-                : "Etiqueta nutricional adjunta"
+                ? t("photo.attachedPlate")
+                : t("photo.attachedLabel")
             }
           />
           <div>
             <strong>{photo.name}</strong>
             <span>
               {photo.image.kind === "plate"
-                ? "Revisaremos ingredientes y cantidades juntos."
-                : "La etiqueta tiene prioridad sobre USDA."}
+                ? t("photo.plateHelp")
+                : t("photo.labelHelp")}
             </span>
           </div>
           <button
             className="photo-remove"
             type="button"
             disabled={disabled || reading}
-            aria-label="Quitar foto"
+            aria-label={t("photo.remove")}
             onClick={() => {
               onChange(null);
               setError("");
@@ -83,7 +85,7 @@ export function NutritionPhotoInput({
             disabled={disabled || reading}
             onClick={() => plateInput.current?.click()}
           >
-            {reading ? "Leyendo foto…" : "Foto de plato"}
+            {reading ? t("photo.reading") : t("photo.platePhoto")}
           </button>
           <button
             className="quiet-button photo-attach"
@@ -91,15 +93,15 @@ export function NutritionPhotoInput({
             disabled={disabled || reading}
             onClick={() => input.current?.click()}
           >
-            {reading ? "Leyendo foto…" : "Adjuntar etiqueta"}
+            {reading ? t("photo.reading") : t("photo.attachLabel")}
           </button>
         </div>
       )}
       {photo && (
         <p className="photo-hint">
           {photo.image.kind === "plate"
-            ? "La foto se enviará a OpenRouter. El asistente preguntará por lo que no esté claro."
-            : "Se enviará a OpenRouter. Indica cuánto has consumido."}
+            ? t("photo.plateNotice")
+            : t("photo.labelNotice")}
         </p>
       )}
       {error && (

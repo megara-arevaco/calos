@@ -8,14 +8,16 @@ import { useApp } from "./App.hook.js";
 import { useProfiles } from "../../queries/profile.queries.js";
 import { ProfileContext } from "../../shared/ProfileContext.js";
 import { ProfileOnboarding } from "../ProfileOnboarding/index.js";
+import { useTranslation } from "react-i18next";
 
 export function App() {
+  const { t } = useTranslation();
   const profiles = useProfiles();
 
   if (profiles.registry.isPending) {
     return (
       <main className="onboarding-shell">
-        <p role="status">Cargando perfiles…</p>
+        <p role="status">{t("app.loadingProfiles")}</p>
       </main>
     );
   }
@@ -23,8 +25,8 @@ export function App() {
     return (
       <main className="onboarding-shell">
         <div>
-          <p role="alert">No se han podido cargar los perfiles.</p>
-          <button onClick={() => void profiles.registry.refetch()}>Reintentar</button>
+          <p role="alert">{t("app.profileLoadError")}</p>
+          <button onClick={() => void profiles.registry.refetch()}>{t("common.retry")}</button>
         </div>
       </main>
     );
@@ -47,6 +49,7 @@ export function App() {
 }
 
 function AppWorkspace({ profiles }: { profiles: ReturnType<typeof useProfiles> }) {
+  const { t } = useTranslation();
   const state = useApp();
   return (
     <main className="app-shell" data-view={state.view}>
@@ -61,7 +64,7 @@ function AppWorkspace({ profiles }: { profiles: ReturnType<typeof useProfiles> }
       />
       {profiles.select.isError && (
         <p className="profile-error" role="alert">
-          No se ha podido cambiar de perfil. Prueba de nuevo.
+          {t("app.profileSwitchError")}
         </p>
       )}
       <div className="workspace">
@@ -70,7 +73,7 @@ function AppWorkspace({ profiles }: { profiles: ReturnType<typeof useProfiles> }
           className="content waist-content"
           id="cintura-panel"
           hidden={state.view !== "cintura"}
-          aria-label="Medidas de cintura"
+          aria-label={t("nav.waistMeasurements")}
         >
           <WaistTracker />
         </section>
@@ -78,7 +81,7 @@ function AppWorkspace({ profiles }: { profiles: ReturnType<typeof useProfiles> }
           className="content waist-content"
           id="peso-panel"
           hidden={state.view !== "peso"}
-          aria-label="Medidas de peso"
+          aria-label={t("nav.weightMeasurements")}
         >
           <WeightTracker />
         </section>

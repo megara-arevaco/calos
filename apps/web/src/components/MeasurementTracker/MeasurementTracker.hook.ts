@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import {
   useMeasurementsQuery,
   useSaveMeasurementMutation,
@@ -8,8 +9,9 @@ import {
 import { today } from "../../shared/presentation.js";
 
 export function useMeasurementTracker(kind: MeasurementKind) {
+  const { t } = useTranslation();
   const isWeight = kind === "weight";
-  const title = isWeight ? "Peso" : "Cintura";
+  const title = isWeight ? t("measurements.weightTitle") : t("measurements.waistTitle");
   const unit = isWeight ? "kg" : "cm";
   const max = isWeight ? 500 : 300;
   const prefix = isWeight ? "weight" : "waist";
@@ -38,17 +40,17 @@ export function useMeasurementTracker(kind: MeasurementKind) {
     setError("");
     setNotice("");
     if (!Number.isFinite(amount) || amount < 0.1 || amount > max) {
-      setError(`Introduce una medida entre 0,1 y ${max} ${unit}.`);
+      setError(t("measurements.invalid", { max, unit }));
       return;
     }
     try {
       const updating = history.some((item) => item.date === date);
       await saveMutation.mutateAsync({ date, value: amount });
       setValue("");
-      setNotice(updating ? "Medida actualizada." : "Medida guardada.");
+      setNotice(updating ? t("measurements.updated") : t("measurements.saved"));
     } catch {
       setError(
-        "No se ha podido guardar la medida. Revisa los datos e inténtalo de nuevo.",
+        t("measurements.saveError"),
       );
     }
   };
@@ -60,15 +62,15 @@ export function useMeasurementTracker(kind: MeasurementKind) {
     setNotice("");
     try {
       await deleteMutation.mutateAsync(id);
-      setNotice("Medida eliminada.");
+      setNotice(t("measurements.deleted"));
     } catch {
-      setError("No se ha podido eliminar la medida. Prueba de nuevo.");
+      setError(t("measurements.deleteError"));
     }
   };
   const displayError =
     error ||
     (historyQuery.isError
-      ? "No se ha podido cargar el historial. Prueba de nuevo."
+      ? t("measurements.loadError")
       : "");
   const latest = history[0];
   const first = history.at(-1);

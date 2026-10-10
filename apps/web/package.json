@@ -9,19 +9,21 @@
     "typecheck": "tsc --noEmit && tsc --project tsconfig.e2e.json"
   },
   "devDependencies": {
-    "vite": "^7.1.3",
-    "@vitejs/plugin-react": "^4.7.0",
     "@playwright/test": "^1.63.0",
     "@types/node": "^24.0.0",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
-    "typescript": "^5.8.3"
+    "@vitejs/plugin-react": "^4.7.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.1.3"
   },
   "dependencies": {
     "@calos/core": "workspace:*",
     "@phosphor-icons/react": "^2.1.10",
     "@tanstack/react-query": "5.102.8",
+    "i18next": "^26.4.2",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "react-i18next": "^17.0.16"
   }
 }

@@ -6,5 +6,9 @@ export default defineConfig({
   root: import.meta.dirname,
   plugins: [react()],
   build: { outDir: resolve(import.meta.dirname, "dist"), emptyOutDir: true },
-  server: { proxy: { "/api": "http://127.0.0.1:3002" } },
+  server: {
+    proxy: {
+      "/api": { target: "http://127.0.0.1:3002", changeOrigin: false },
+    },
+  },
 });

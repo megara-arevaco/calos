@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import type { ChatMessage, NutritionPlanProposal } from "@calos/core";
 import type { PhotoAttachment } from "../NutritionPhotoInput/index.js";
 import type { AppView } from "../App/App.hook.js";
@@ -7,13 +8,15 @@ import { useSaveNutritionPlan } from "../../queries/plan.queries.js";
 import { today } from "../../shared/presentation.js";
 
 export function useChatAssistant(view: AppView, selectedDate: string) {
+  const { t } = useTranslation();
+  const greeting = t("assistant.greeting");
   const chatMessages = useRef<HTMLDivElement>(null);
   const [photo, setPhoto] = useState<PhotoAttachment | null>(null);
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
-      text: "Hola. Podemos revisar tus comidas, trabajar en los objetivos de tu perfil o preparar un plan que encaje con tu rutina. Cuéntame qué necesitas; también puedes enviar una foto del plato.",
+      text: greeting,
     },
   ]);
   const mutation = useChatMutation();
@@ -33,7 +36,13 @@ export function useChatAssistant(view: AppView, selectedDate: string) {
         ...current,
         {
           role: "assistant",
-          text: `He actualizado tus objetivos: ${plan.goal}. ${plan.dailyGoal.calories} kcal al día; proteína ${plan.dailyGoal.protein} g, carbohidratos ${plan.dailyGoal.carbs} g y grasas ${plan.dailyGoal.fat} g.`,
+          text: t("assistant.goalsUpdated", {
+            goal: plan.goal,
+            calories: plan.dailyGoal.calories,
+            protein: plan.dailyGoal.protein,
+            carbs: plan.dailyGoal.carbs,
+            fat: plan.dailyGoal.fat,
+          }),
         },
       ]);
     } catch {
@@ -41,6 +50,13 @@ export function useChatAssistant(view: AppView, selectedDate: string) {
     }
   };
   const sending = mutation.isPending || planMutation.isPending;
+  useEffect(() => {
+    setMessages((current) =>
+      current.length === 1 && current[0]?.role === "assistant"
+        ? [{ role: "assistant", text: greeting }]
+        : current,
+    );
+  }, [greeting]);
   useEffect(() => {
     if (chatMessages.current) {
       chatMessages.current.scrollTop =
@@ -55,8 +71,8 @@ export function useChatAssistant(view: AppView, selectedDate: string) {
       draft.trim() ||
       (photo
         ? photo.image.kind === "plate"
-          ? "Analiza este plato y ayúdame a registrarlo."
-          : "Quiero registrar el producto de esta etiqueta nutricional."
+          ? t("assistant.photoPlatePrompt")
+          : t("assistant.photoLabelPrompt")
         : "");
 
     if (!message || sending) {
@@ -68,7 +84,7 @@ export function useChatAssistant(view: AppView, selectedDate: string) {
       ...current,
       {
         role: "user",
-        text: `${message}${photo ? (photo.image.kind === "plate" ? "\n[Foto de plato adjunta]" : "\n[Foto de etiqueta adjunta]") : ""}`,
+        text: `${message}${photo ? `\n${photo.image.kind === "plate" ? t("assistant.plateMarker") : t("assistant.labelMarker")}` : ""}`,
       },
     ]);
     try {
@@ -107,7 +123,7 @@ export function useChatAssistant(view: AppView, selectedDate: string) {
         ...current,
         {
           role: "assistant",
-          text: "No he podido procesar tu mensaje. Prueba de nuevo.",
+          text: t("assistant.chatError"),
         },
       ]);
     }

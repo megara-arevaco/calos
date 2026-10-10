@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 export interface MeasurementPoint {
   id: string;
   date: string;
   value: number;
 }
 
-const valueLabel = (value: number) =>
-  new Intl.NumberFormat("es-ES", { maximumFractionDigits: 1 }).format(value);
+const valueLabel = (value: number, locale: string) =>
+  new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(value);
 
-const dateLabel = (date: string) =>
-  new Intl.DateTimeFormat("es-ES", {
+const dateLabel = (date: string, locale: string) =>
+  new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -26,6 +27,8 @@ export function MeasurementChart({
   unit: string;
   id: string;
 }) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage === "en" ? "en-US" : "es-ES";
   const container = useRef<HTMLElement>(null);
   const [width, setWidth] = useState(680);
   useEffect(() => {
@@ -48,7 +51,7 @@ export function MeasurementChart({
     return (
       <section ref={container} className="waist-chart" aria-labelledby={id}>
         <h3 id={id}>{title}</h3>
-        <p className="waist-help">La gráfica aparecerá al guardar tu primera medida.</p>
+        <p className="waist-help">{t("measurements.chartFirst")}</p>
       </section>
     );
   }
@@ -80,15 +83,15 @@ export function MeasurementChart({
         <h3 id={id}>{title}</h3>
         <p aria-live="polite">
           <strong>
-            {valueLabel(selected.value)} {unit}
+            {valueLabel(selected.value, locale)} {unit}
           </strong>
-          <span> · {dateLabel(selected.date)}</span>
+          <span> · {dateLabel(selected.date, locale)}</span>
         </p>
       </div>
       <svg
         viewBox={`0 0 ${width} ${height}`}
         role="group"
-        aria-label={`${title} en ${unit} por fecha. Selecciona un punto para ver su medida.`}
+        aria-label={t("measurements.chartAria", { title, unit })}
       >
         {[0, 1, 2, 3].map((tick) => {
           const value = min + ((max - min) * tick) / 3;
@@ -107,7 +110,7 @@ export function MeasurementChart({
                 y={y(value) + 4}
                 textAnchor="end"
               >
-                {valueLabel(value)}
+                {valueLabel(value, locale)}
               </text>
             </g>
           );
@@ -122,7 +125,7 @@ export function MeasurementChart({
             className={`chart-point ${selected.id === item.id ? "selected" : ""}`}
             role="button"
             tabIndex={0}
-            aria-label={`${dateLabel(item.date)}: ${valueLabel(item.value)} ${unit}`}
+            aria-label={`${dateLabel(item.date, locale)}: ${valueLabel(item.value, locale)} ${unit}`}
             aria-pressed={selected.id === item.id}
             onClick={() => setSelectedId(item.id)}
             onKeyDown={(event) => {
@@ -133,7 +136,7 @@ export function MeasurementChart({
             }}
           >
             <title>
-              {dateLabel(item.date)} · {valueLabel(item.value)} {unit}
+              {dateLabel(item.date, locale)} · {valueLabel(item.value, locale)} {unit}
             </title>
             <circle className="chart-hit" cx={x(item.date)} cy={y(item.value)} r={14} />
             <circle
@@ -150,7 +153,7 @@ export function MeasurementChart({
           y={height - 12}
           textAnchor={ordered.length === 1 ? "middle" : "start"}
         >
-          {dateLabel(ordered[0].date)}
+          {dateLabel(ordered[0].date, locale)}
         </text>
         {ordered.length > 1 && (
           <text
@@ -159,14 +162,14 @@ export function MeasurementChart({
             y={height - 12}
             textAnchor="end"
           >
-            {dateLabel(ordered.at(-1)!.date)}
+            {dateLabel(ordered.at(-1)!.date, locale)}
           </text>
         )}
       </svg>
       <p className="waist-help">
         {ordered.length === 1
-          ? "Añade otra medida para ver la evolución."
-          : "Selecciona un punto para consultar su fecha y medida."}
+          ? t("measurements.chartAdd")
+          : t("measurements.chartSelect")}
       </p>
     </section>
   );

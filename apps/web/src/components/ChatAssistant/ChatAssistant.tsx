@@ -8,6 +8,7 @@ import {
   ChatCircleDotsIcon,
   PaperPlaneTiltIcon,
 } from "../../shared/icons.js";
+import { useTranslation } from "react-i18next";
 export function ChatAssistant({
   view,
   selectedDate,
@@ -17,6 +18,8 @@ export function ChatAssistant({
   selectedDate: string;
   setView: (view: AppView) => void;
 }) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.resolvedLanguage === "en" ? "en-US" : "es-ES";
   const {
     chatMessages,
     photo,
@@ -32,23 +35,23 @@ export function ChatAssistant({
     planError,
   } = useChatAssistant(view, selectedDate);
   return (
-    <aside className="chat" id="chat" aria-label="Asistente">
+    <aside className="chat" id="chat" aria-label={t("assistant.label")}>
       <div className="chat-header">
         <div>
           <span className="chat-orb">
             <ChatCircleDotsIcon weight="fill" />
           </span>
           <div>
-            <strong>Asistente Calos</strong>
+            <strong>{t("assistant.title")}</strong>
             <small>
               <i />
-              Acompañamiento con OpenRouter
+              {t("assistant.openrouter")}
             </small>
           </div>
         </div>
         <button
           aria-label={
-            view === "asistente" ? "Volver a Comida" : "Ver solo el asistente"
+            view === "asistente" ? t("assistant.backToFood") : t("assistant.onlyAssistant")
           }
           onClick={() => setView(view === "asistente" ? "comida" : "asistente")}
         >
@@ -56,20 +59,20 @@ export function ChatAssistant({
         </button>
       </div>
       <p className="chat-context">
-        Contexto:{" "}
+        {t("assistant.context")}{" "}
         {view === "cintura"
-          ? "Cintura"
+          ? t("nav.waist")
           : view === "peso"
-            ? "Peso"
+            ? t("nav.weight")
             : view === "asistente"
-              ? "Asistente"
-              : "Comida"}
+              ? t("nav.assistant")
+              : t("nav.food")}
         <span>
           {view === "cintura"
-            ? "Historial de medidas en cm"
+            ? t("assistant.waistHistory")
             : view === "peso"
-              ? "Historial de medidas en kg"
-              : `${selectedDate === today() ? "Día abierto" : "Historial de comidas"} · ${formatDate(selectedDate)}`}
+              ? t("assistant.weightHistory")
+              : `${selectedDate === today() ? t("assistant.openDay") : t("assistant.foodHistory")} · ${formatDate(selectedDate, locale)}`}
         </span>
       </p>
       <div className="messages" ref={chatMessages}>
@@ -80,8 +83,8 @@ export function ChatAssistant({
           </div>
         ))}
         {proposal && (
-          <section className="coach-proposal" aria-label="Propuesta de objetivos">
-            <h3>Propuesta para tu perfil</h3>
+          <section className="coach-proposal" aria-label={t("assistant.goalProposal")}>
+            <h3>{t("assistant.proposalForProfile")}</h3>
             <p>{proposal.plan.goal}</p>
             <p>
               {proposal.plan.dailyGoal.calories} kcal · P{" "}
@@ -89,10 +92,10 @@ export function ChatAssistant({
               · G {proposal.plan.dailyGoal.fat} g
             </p>
             {proposal.plan.targetWeightKg && (
-              <p>Peso objetivo: {proposal.plan.targetWeightKg} kg</p>
+              <p>{t("assistant.targetWeight", { value: proposal.plan.targetWeightKg })}</p>
             )}
             {proposal.plan.targetDate && (
-              <p>Fecha orientativa: {proposal.plan.targetDate}</p>
+              <p>{t("assistant.targetDate", { value: proposal.plan.targetDate })}</p>
             )}
             {!!proposal.plan.habits.length && (
               <ul>
@@ -108,30 +111,29 @@ export function ChatAssistant({
                 disabled={sending}
                 onClick={discardProposal}
               >
-                Descartar propuesta
+                {t("assistant.discardProposal")}
               </button>
               <button
                 className="quiet-button onboarding-primary"
                 disabled={sending}
                 onClick={() => void applyProposal()}
               >
-                Aplicar objetivos
+                {t("assistant.applyGoals")}
               </button>
             </div>
             {planError && (
               <p className="photo-error" role="alert">
-                No se han podido aplicar los objetivos. Si han cambiado, descarta esta
-                propuesta y revísalos de nuevo.
+                {t("assistant.applyError")}
               </p>
             )}
           </section>
         )}
         {view === "asistente" && messages.length === 1 && !sending && (
-          <div className="coach-prompts" aria-label="Empezar con el asistente">
+          <div className="coach-prompts" aria-label={t("assistant.start")}>
             {[
-              "Ayúdame a definir un objetivo realista",
-              "Revisa mis comidas y dame tres mejoras",
-              "¿Qué puedo cenar según mis preferencias?",
+              t("assistant.promptGoal"),
+              t("assistant.promptImprove"),
+              t("assistant.promptDinner"),
             ].map((prompt) => (
               <button
                 className="quiet-button"
@@ -143,15 +145,15 @@ export function ChatAssistant({
             ))}
           </div>
         )}
-        {sending && <div className="message assistant loading">Calculando…</div>}
+        {sending && <div className="message assistant loading">{t("assistant.calculate")}</div>}
       </div>
       <form className="composer" onSubmit={send}>
         <label htmlFor="chat-input">
           {view === "cintura" || view === "peso"
-            ? "Consulta tu evolución"
+            ? t("assistant.askEvolution")
             : view === "asistente"
-              ? "¿En qué te ayudo?"
-              : "¿Qué has comido?"}
+              ? t("assistant.askHelp")
+              : t("assistant.askFood")}
         </label>
         <NutritionPhotoInput photo={photo} onChange={setPhoto} disabled={sending} />
         <div className="composer-text">
@@ -161,21 +163,21 @@ export function ChatAssistant({
             onChange={(event) => setDraft(event.target.value)}
             placeholder={
               view === "cintura"
-                ? "Ej. ¿Cuánto ha cambiado mi cintura desde la primera medida?"
+                ? t("assistant.exampleWaist")
                 : view === "peso"
-                  ? "Ej. ¿Cómo ha evolucionado mi peso?"
+                  ? t("assistant.exampleWeight")
                   : view === "asistente"
-                    ? "Ej. Quiero mejorar mis hábitos; revisa mi semana y mis objetivos"
-                    : "Ej. 100 g de pechuga de pollo asada y 150 g de arroz blanco cocido"
+                    ? t("assistant.exampleAssistant")
+                    : t("assistant.exampleFood")
             }
             maxLength={2000}
             rows={3}
           />
-          <button disabled={(!draft.trim() && !photo) || sending} aria-label="Enviar">
+          <button disabled={(!draft.trim() && !photo) || sending} aria-label={t("assistant.send")}>
             <PaperPlaneTiltIcon weight="fill" />
           </button>
         </div>
-        <p>Tus mensajes y los datos de esta sección se envían a OpenRouter.</p>
+        <p>{t("assistant.privacy")}</p>
       </form>
     </aside>
   );
